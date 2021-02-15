@@ -1,0 +1,221 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           24/Feb/2020  11:58:22
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_05\wheels.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWCE2B.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_05\wheels.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\Debug\List\wheels.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\Debug\Obj\wheels.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_05\wheels.c
+      1          //==============================================================================
+      2          // Filename : wheels.c
+      3          //
+      4          // Description: This file contains the functions for wheel movement
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: February 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          
+     11          #include  "functions.h"
+     12          #include  "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x454
+   \   union <unnamed> _A_TB3CCR1_L
+   \                     _A_TB3CCR1_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x456
+   \   union <unnamed> _A_TB3CCR2_L
+   \                     _A_TB3CCR2_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x458
+   \   union <unnamed> _A_TB3CCR3_L
+   \                     _A_TB3CCR3_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x45a
+   \   union <unnamed> _A_TB3CCR4_L
+   \                     _A_TB3CCR4_L:
+   \   000000                DS8 2
+     13          #include "macros.h"
+     14          
+     15          //GLOBALS=======================================================================
+     16          extern unsigned int myTime;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     17          int waitCount = RESET_STATE;
+   \                     waitCount:
+   \   000000                DS8 2
+     18          extern unsigned int prevButton;
+     19          extern unsigned int buttonPress;
+     20          extern int wheelCount;
+     21          extern volatile unsigned int wheel_state;
+     22          //==============================================================================
+     23          
+
+   \                                 In  segment CODE, align 2
+     24          void stop_Movement(void){
+   \                     stop_Movement:
+     25            RIGHT_FORWARD_SPEED = WHEEL_OFF;
+   \   000000   82435404     MOV.W   #0x0, &0x454
+     26            LEFT_FORWARD_SPEED = WHEEL_OFF;
+   \   000004   82435604     MOV.W   #0x0, &0x456
+     27            RIGHT_REVERSE_SPEED = WHEEL_OFF;
+   \   000008   82435804     MOV.W   #0x0, &0x458
+     28            LEFT_REVERSE_SPEED = WHEEL_OFF;
+   \   00000C   82435A04     MOV.W   #0x0, &0x45a
+     29          }
+   \   000010   1001         RETA
+   \   000012                REQUIRE _A_TB3CCR1_L
+   \   000012                REQUIRE _A_TB3CCR2_L
+   \   000012                REQUIRE _A_TB3CCR3_L
+   \   000012                REQUIRE _A_TB3CCR4_L
+     30          
+
+   \                                 In  segment CODE, align 2
+     31          void move_Forward(void){
+   \                     move_Forward:
+     32            RIGHT_REVERSE_SPEED = WHEEL_OFF;          // right reverse off
+   \   000000   82435804     MOV.W   #0x0, &0x458
+     33            LEFT_REVERSE_SPEED = WHEEL_OFF;           // left reverse off
+   \   000004   82435A04     MOV.W   #0x0, &0x45a
+     34            RIGHT_FORWARD_SPEED = FAST;               // right forward on
+   \   000008   B24030755404 MOV.W   #0x7530, &0x454
+     35            LEFT_FORWARD_SPEED = FAST;                // left forward on 
+   \   00000E   B24030755604 MOV.W   #0x7530, &0x456
+     36          }
+   \   000014   1001         RETA
+   \   000016                REQUIRE _A_TB3CCR3_L
+   \   000016                REQUIRE _A_TB3CCR4_L
+   \   000016                REQUIRE _A_TB3CCR1_L
+   \   000016                REQUIRE _A_TB3CCR2_L
+     37          
+
+   \                                 In  segment CODE, align 2
+     38          void move_Reverse(void){
+   \                     move_Reverse:
+     39            RIGHT_FORWARD_SPEED = WHEEL_OFF;          // right foward off
+   \   000000   82435404     MOV.W   #0x0, &0x454
+     40            LEFT_FORWARD_SPEED = WHEEL_OFF;           // left forward off
+   \   000004   82435604     MOV.W   #0x0, &0x456
+     41            RIGHT_REVERSE_SPEED = FAST;               // right reverse on
+   \   000008   B24030755804 MOV.W   #0x7530, &0x458
+     42            LEFT_REVERSE_SPEED = HALF_SPEED;          // left reverse on 
+   \   00000E   B240204E5A04 MOV.W   #0x4e20, &0x45a
+     43          }
+   \   000014   1001         RETA
+   \   000016                REQUIRE _A_TB3CCR1_L
+   \   000016                REQUIRE _A_TB3CCR2_L
+   \   000016                REQUIRE _A_TB3CCR3_L
+   \   000016                REQUIRE _A_TB3CCR4_L
+     44          
+
+   \                                 In  segment CODE, align 2
+     45          void spin_CW(void){
+   \                     spin_CW:
+     46            RIGHT_FORWARD_SPEED = WHEEL_OFF;          // right forward off
+   \   000000   82435404     MOV.W   #0x0, &0x454
+     47            LEFT_REVERSE_SPEED = WHEEL_OFF;           // left reverese off
+   \   000004   82435A04     MOV.W   #0x0, &0x45a
+     48            RIGHT_REVERSE_SPEED = FAST;               // right reverse on 
+   \   000008   B24030755804 MOV.W   #0x7530, &0x458
+     49            LEFT_FORWARD_SPEED = FAST;                // left forward on
+   \   00000E   B24030755604 MOV.W   #0x7530, &0x456
+     50          }
+   \   000014   1001         RETA
+   \   000016                REQUIRE _A_TB3CCR1_L
+   \   000016                REQUIRE _A_TB3CCR4_L
+   \   000016                REQUIRE _A_TB3CCR3_L
+   \   000016                REQUIRE _A_TB3CCR2_L
+     51          
+
+   \                                 In  segment CODE, align 2
+     52          void spin_CCW(void){
+   \                     spin_CCW:
+     53            LEFT_FORWARD_SPEED = WHEEL_OFF;           // left forward off
+   \   000000   82435604     MOV.W   #0x0, &0x456
+     54            RIGHT_REVERSE_SPEED = WHEEL_OFF;          // right reverse off
+   \   000004   82435804     MOV.W   #0x0, &0x458
+     55            LEFT_REVERSE_SPEED = FAST;                // left reverse on
+   \   000008   B24030755A04 MOV.W   #0x7530, &0x45a
+     56            RIGHT_FORWARD_SPEED = FAST;               // right forward on
+   \   00000E   B24030755404 MOV.W   #0x7530, &0x454
+     57          }
+   \   000014   1001         RETA
+   \   000016                REQUIRE _A_TB3CCR2_L
+   \   000016                REQUIRE _A_TB3CCR3_L
+   \   000016                REQUIRE _A_TB3CCR4_L
+   \   000016                REQUIRE _A_TB3CCR1_L
+     58          
+     59          
+     60          
+     61          
+     62          
+     63          
+     64            
+     65            
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   move_Forward
+      4   move_Reverse
+      4   spin_CCW
+      4   spin_CW
+      4   stop_Movement
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       2  _A_TB3CCR1_L
+       2  _A_TB3CCR2_L
+       2  _A_TB3CCR3_L
+       2  _A_TB3CCR4_L
+      22  move_Forward
+      22  move_Reverse
+      22  spin_CCW
+      22  spin_CW
+      18  stop_Movement
+       2  waitCount
+
+ 
+ 106 bytes in segment CODE
+   8 bytes in segment DATA16_AN
+   2 bytes in segment DATA16_Z
+ 
+ 106 bytes of CODE memory
+   2 bytes of DATA memory (+ 8 bytes shared)
+
+Errors: none
+Warnings: none

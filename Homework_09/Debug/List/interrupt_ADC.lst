@@ -1,0 +1,253 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           03/Apr/2020  15:29:51
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\interrupt_ADC.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWFA03.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Homework_09\interrupt_ADC.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\List\interrupt_ADC.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\Obj\interrupt_ADC.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Homework_09\interrupt_ADC.c
+      1          //==============================================================================
+      2          // Filename : interrupt_ADC.c
+      3          //
+      4          // Description: This file contains the interrupt service routines for ADC        
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: March 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          #include "macros.h"
+     11          #include "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x700
+   \   union <unnamed> _A_ADCCTL0_L
+   \                     _A_ADCCTL0_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x70a
+   \   union <unnamed> _A_ADCMCTL0_L
+   \                     _A_ADCMCTL0_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x712
+   \   union <unnamed> _A_ADCMEM0_L
+   \                     _A_ADCMEM0_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x71e
+   \   union <unnamed> _A_ADCIV_L
+   \                     _A_ADCIV_L:
+   \   000000                DS8 2
+     12          #include "functions.h"
+     13          #include <string.h>
+     14          // globals
+     15          //------------------------------------------------------------------------------
+     16            
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     17            unsigned int ADC_Channel;
+   \                     ADC_Channel:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     18            unsigned int ADC_Left_Detect;
+   \                     ADC_Left_Detect:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     19            unsigned int ADC_Right_Detect;
+   \                     ADC_Right_Detect:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     20            unsigned int ADC_Thumb; 
+   \                     ADC_Thumb:
+   \   000000                DS8 2
+     21          
+     22          //------------------------------------------------------------------------------
+     23          
+     24            #pragma vector = ADC_VECTOR
+
+   \                                 In  segment ISR_CODE, align 2
+     25          __interrupt void ADC_ISR(void){
+   \                     ADC_ISR:
+   \   000000   1F15         PUSHM.W #0x2, R15
+     26              switch(__even_in_range(ADCIV,ADCIV_ADCIFG)){
+   \   000002   1F421E07     MOV.W   &0x71e, R15
+   \   000006   E00F         ADDA    R15, PC
+   \                     `?<Jumptable for ADC_ISR>_0`:
+   \   000008   453C         JMP     ??ADC_ISR_1
+   \   00000A   443C         JMP     ??ADC_ISR_1
+   \   00000C   433C         JMP     ??ADC_ISR_1
+   \   00000E   423C         JMP     ??ADC_ISR_1
+   \   000010   413C         JMP     ??ADC_ISR_1
+   \   000012   403C         JMP     ??ADC_ISR_1
+   \   000014   003C         JMP     ??ADC_ISR_6
+     27              case ADCIV_NONE:
+     28              break;
+     29              case ADCIV_ADCOVIFG: // When a conversion result is written to the ADCMEM0
+     30              // before its previous conversion result was read.
+     31              break;
+     32              case ADCIV_ADCTOVIFG:               // ADC conversion-time overflow
+     33              break;
+     34              case ADCIV_ADCHIIFG:                // Window comparator interrupt flags
+     35              break;
+     36              case ADCIV_ADCLOIFG:                // Window comparator interrupt flag
+     37              break;
+     38              case ADCIV_ADCINIFG:                // Window comparator interrupt flag
+     39              break;
+     40              case ADCIV_ADCIFG:                  // ADCMEM0 memory register with the conversion result
+     41                ADCCTL0 &= ~ADCENC;               // disable enc bit
+   \                     ??ADC_ISR_6:
+   \   000016   A2C30007     BIC.W   #0x2, &0x700
+     42                switch(ADC_Channel++){            // create global ADC_Channel variable
+   \   00001A   1F42....     MOV.W   &ADC_Channel, R15
+   \   00001E   0E4F         MOV.W   R15, R14
+   \   000020   1E53         ADD.W   #0x1, R14
+   \   000022   824E....     MOV.W   R14, &ADC_Channel
+   \   000026   0F83         SUB.W   #0x0, R15
+   \   000028   0724         JEQ     ??ADC_ISR_2
+   \   00002A   1F83         SUB.W   #0x1, R15
+   \   00002C   1324         JEQ     ??ADC_ISR_3
+   \   00002E   1F83         SUB.W   #0x1, R15
+   \   000030   2024         JEQ     ??ADC_ISR_4
+   \   000032   1F83         SUB.W   #0x1, R15
+   \   000034   2924         JEQ     ??ADC_ISR_5
+   \   000036   2A3C         JMP     ??ADC_ISR_0
+     43                case ADC_CHANNEL_2:
+     44                  ADCMCTL0 &= ~ADCINCH_2;         //disable last channel A2
+   \                     ??ADC_ISR_2:
+   \   000038   A2C30A07     BIC.W   #0x2, &0x70a
+     45                  ADCMCTL0 |= ADCINCH_3;          // enable next channel A3
+   \   00003C   B2D003000A07 BIS.W   #0x3, &0x70a
+     46                  ADC_Left_Detect = ADCMEM0;      // move result into global
+   \   000042   92421207.... MOV.W   &0x712, &ADC_Left_Detect
+     47                  ADC_Left_Detect = ADC_Left_Detect >> DIVIDE_BY_FOUR; // divide result by 4
+   \   000048   1F42....     MOV.W   &ADC_Left_Detect, R15
+   \   00004C   5F07         RRUM.W  #0x2, R15
+   \   00004E   824F....     MOV.W   R15, &ADC_Left_Detect
+     48                  //adc_line4(POSITION_ONE);                   // place string in display
+     49                  break;
+   \   000052   1C3C         JMP     ??ADC_ISR_0
+     50                case ADC_CHANNEL_3:
+     51                  //replicate for each channel being used
+     52                  ADCMCTL0 &= ~ADCINCH_3;         // disable last channel A3
+   \                     ??ADC_ISR_3:
+   \   000054   B2F0FCFF0A07 AND.W   #0xfffc, &0x70a
+     53                  ADCMCTL0 |= ADCINCH_5;          // enable next channel A5
+   \   00005A   B2D005000A07 BIS.W   #0x5, &0x70a
+     54                  ADC_Right_Detect = ADCMEM0;     // move result into global
+   \   000060   92421207.... MOV.W   &0x712, &ADC_Right_Detect
+     55                  ADC_Right_Detect = ADC_Right_Detect >> DIVIDE_BY_FOUR; // divide result by 4
+   \   000066   1F42....     MOV.W   &ADC_Right_Detect, R15
+   \   00006A   5F07         RRUM.W  #0x2, R15
+   \   00006C   824F....     MOV.W   R15, &ADC_Right_Detect
+     56                  //adc_line3(POSITION_ONE);                   // place string in display
+     57                  break;
+   \   000070   0D3C         JMP     ??ADC_ISR_0
+     58                case ADC_CHANNEL_4:
+     59                  ADCMCTL0 &= ~ADCINCH_5;         // disable last channel A5
+   \                     ??ADC_ISR_4:
+   \   000072   B2F0FAFF0A07 AND.W   #0xfffa, &0x70a
+     60                  ADCMCTL0 |= ADCINCH_2;          // enable initial channel A2
+   \   000078   A2D30A07     BIS.W   #0x2, &0x70a
+     61                  ADC_Thumb = ADCMEM0;            // move result into global
+   \   00007C   92421207.... MOV.W   &0x712, &ADC_Thumb
+     62                  //ADC_Thumb = ADC_Thumb >> DIVIDE_BY_FOUR; // divide result by 4
+     63                  ADC_Channel = RESET_STATE; 
+   \   000082   8243....     MOV.W   #0x0, &ADC_Channel
+     64                  //adc_line2(POSITION_ONE);                   // place string in display
+     65                  break;
+   \   000086   023C         JMP     ??ADC_ISR_0
+     66                case ADC_RESET_STATE:
+     67                  ADC_Channel = RESET_STATE;      // set state back to beginning channel
+   \                     ??ADC_ISR_5:
+   \   000088   8243....     MOV.W   #0x0, &ADC_Channel
+     68                default: break;            
+     69                }
+     70                ADCCTL0 |= ADCENC;                // Enable Conversions
+   \                     ??ADC_ISR_0:
+   \   00008C   A2D30007     BIS.W   #0x2, &0x700
+     71                ADCCTL0 |= ADCSC;                 // Start next Sample
+   \   000090   92D30007     BIS.W   #0x1, &0x700
+     72              break;
+     73              default:
+     74              break;
+     75            }
+     76          }
+   \                     ??ADC_ISR_1:
+   \   000094   1E17         POPM.W  #0x2, R15
+   \   000096   0013         RETI
+   \   000098                REQUIRE _A_ADCCTL0_L
+   \   000098                REQUIRE _A_ADCMCTL0_L
+   \   000098                REQUIRE _A_ADCMEM0_L
+   \   000098                REQUIRE _A_ADCIV_L
+
+   \                                 In  segment INTVEC, offset 0x3a, root
+   \                     `??ADC_ISR::??INTVEC 58`:
+   \   00003A   ....         DC16    ADC_ISR
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      8   ADC_ISR
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       2  ADC_Channel
+     152  ADC_ISR
+       2  ADC_ISR::??INTVEC 58
+       2  ADC_Left_Detect
+       2  ADC_Right_Detect
+       2  ADC_Thumb
+       2  _A_ADCCTL0_L
+       2  _A_ADCIV_L
+       2  _A_ADCMCTL0_L
+       2  _A_ADCMEM0_L
+
+ 
+   8 bytes in segment DATA16_AN
+   8 bytes in segment DATA16_Z
+   2 bytes in segment INTVEC
+ 152 bytes in segment ISR_CODE
+ 
+ 152 bytes of CODE  memory
+   0 bytes of CONST memory (+ 2 bytes shared)
+   8 bytes of DATA  memory (+ 8 bytes shared)
+
+Errors: none
+Warnings: none

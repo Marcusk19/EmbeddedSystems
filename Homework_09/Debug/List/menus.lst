@@ -1,0 +1,1578 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           03/Apr/2020  15:29:51
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Homework_09\menus.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWFA00.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Homework_09\menus.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\List\menus.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\Obj\menus.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Homework_09\menus.c
+      1          //==============================================================================
+      2          // Filename : menus.c
+      3          //
+      4          // Description: This file contains functions for menus used in Homework_09
+      5          // converter
+      6          //
+      7          // Author: Marcus Kok
+      8          // Date: April 2020
+      9          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+     10          //==============================================================================
+     11          
+     12          
+     13          #include "macros.h"
+     14          #include "msp430.h"
+     15          #include "functions.h"
+     16          #include <string.h>
+     17          
+     18          //globals-----------------------------------------------------------------------
+     19            
+     20            extern char display_line[numLines][strSize];
+     21            extern volatile unsigned char display_changed;
+     22          
+     23            extern unsigned int ADC_Thumb;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     24            unsigned int menu_state = MAIN;
+   \                     menu_state:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     25            unsigned int main_menu_state;
+   \                     main_menu_state:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     26            unsigned int menu_display;
+   \                     menu_display:
+   \   000000                DS8 2
+     27            extern unsigned int Button_One;
+     28            extern unsigned int Button_Two; 
+
+   \                                 In  segment DATA16_I, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     29            char song[] = "We're the Red and White from State And we know we are the best. A hand behind our back, We can take on all the rest. Come over the hill, Carolina, Devils and Deacs stand in line. The Red and White from N.C. State. Go State!";
+   \                     song:
+   \   000000                DS8 224
+   \   0000E0                REQUIRE `?<Initializer for song>`
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     30            int thumb_val = RESET_STATE;
+   \                     thumb_val:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     31            int prev_thumb_val = RESET_STATE;
+   \                     prev_thumb_val:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     32            char out_song[MAX_STR_SIZE] = "";
+   \                     out_song:
+   \   000000                DS8 11
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     33            int index = RESET_STATE;
+   \                     index:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_I, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     34            int red_white = TRUE;
+   \                     red_white:
+   \   000000                DS8 2
+   \   000002                REQUIRE `?<Initializer for red_white>`
+     35          
+     36          //------------------------------------------------------------------------------
+
+   \                                 In  segment CODE, align 2
+     37          void menu_process(void){                        // what runs in main loop 
+   \                     menu_process:
+     38            switch(menu_state){
+   \   000000   1F42....     MOV.W   &menu_state, R15
+   \   000004   0F83         SUB.W   #0x0, R15
+   \   000006   0724         JEQ     ??menu_process_1
+   \   000008   1F83         SUB.W   #0x1, R15
+   \   00000A   0D24         JEQ     ??menu_process_2
+   \   00000C   1F83         SUB.W   #0x1, R15
+   \   00000E   2724         JEQ     ??menu_process_3
+   \   000010   1F83         SUB.W   #0x1, R15
+   \   000012   2B24         JEQ     ??menu_process_4
+   \   000014   1001         RETA
+     39            case MAIN:
+     40              lcd_BIG_mid();
+   \                     ??menu_process_1:
+   \   000016   ........     CALLA   #lcd_BIG_mid
+     41              clear_line1();
+   \   00001A   ........     CALLA   #clear_line1
+     42              clear_line3();
+   \   00001E   ........     CALLA   #clear_line3
+     43              main_menu();
+   \   000022   ........     BRA     #main_menu
+     44              break;
+     45            case RESISTORS:
+     46              lcd_4line();
+   \                     ??menu_process_2:
+   \   000026   ........     CALLA   #lcd_4line
+     47              //lcd_clear();
+     48              strcpy(display_line[line1], "Color:    ");
+   \   00002A   3D40....     MOV.W   #`?<Constant "Color:    ">`, R13
+   \   00002E   3C40....     MOV.W   #display_line, R12
+   \   000032   ........     CALLA   #strcpy
+     49              update_string(display_line[line1], line1);
+   \   000036   0D43         MOV.W   #0x0, R13
+   \   000038   ........     CALLA   #update_string
+     50              strcpy(display_line[line3], "Value:    ");
+   \   00003C   3D40....     MOV.W   #`?<Constant "Value:    ">`, R13
+   \   000040   3C40....     MOV.W   #display_line + 22, R12
+   \   000044   ........     CALLA   #strcpy
+     51              update_string(display_line[line3], line3);
+   \   000048   2D43         MOV.W   #0x2, R13
+   \   00004A   3C40....     MOV.W   #display_line + 22, R12
+   \   00004E   ........     CALLA   #update_string
+     52              display_changed = TRUE;
+   \   000052   D243....     MOV.B   #0x1, &display_changed
+     53              Resistor_Scroll();
+   \   000056   ........     CALLA   #Resistor_Scroll
+     54              Resistor_Menu_Process();
+   \   00005A   ........     BRA     #Resistor_Menu_Process
+     55              break;
+     56            case SHAPES:
+     57              lcd_BIG_mid();
+   \                     ??menu_process_3:
+   \   00005E   ........     CALLA   #lcd_BIG_mid
+     58              Shapes_Scroll();
+   \   000062   ........     CALLA   #Shapes_Scroll
+     59              Shapes_Menu_Process();
+   \   000066   ........     BRA     #Shapes_Menu_Process
+     60              break;
+     61            case SONG:
+     62              lcd_BIG_mid();
+   \                     ??menu_process_4:
+   \   00006A   ........     CALLA   #lcd_BIG_mid
+     63              clear_line2();
+   \   00006E   ........     CALLA   #clear_line2
+     64              Song_Scroll();
+   \   000072   ........     BRA     #Song_Scroll
+     65              break;
+     66            default: break;
+     67            }
+     68          }
+     69          
+
+   \                                 In  segment CODE, align 2
+     70          void Resistor_Menu_Process(void){
+   \                     Resistor_Menu_Process:
+     71            switch(menu_display){
+   \   000000   1F42....     MOV.W   &menu_display, R15
+   \   000004   0F83         SUB.W   #0x0, R15
+   \   000006   1324         JEQ     ??Resistor_Menu_Process_1
+   \   000008   1F83         SUB.W   #0x1, R15
+   \   00000A   2B24         JEQ     ??Resistor_Menu_Process_2
+   \   00000C   1F83         SUB.W   #0x1, R15
+   \   00000E   4324         JEQ     ??Resistor_Menu_Process_3
+   \   000010   1F83         SUB.W   #0x1, R15
+   \   000012   5B24         JEQ     ??Resistor_Menu_Process_4
+   \   000014   1F83         SUB.W   #0x1, R15
+   \   000016   7324         JEQ     ??Resistor_Menu_Process_5
+   \   000018   1F83         SUB.W   #0x1, R15
+   \   00001A   8B24         JEQ     ??Resistor_Menu_Process_6
+   \   00001C   1F83         SUB.W   #0x1, R15
+   \   00001E   A324         JEQ     ??Resistor_Menu_Process_7
+   \   000020   1F83         SUB.W   #0x1, R15
+   \   000022   BB24         JEQ     ??Resistor_Menu_Process_8
+   \   000024   1F83         SUB.W   #0x1, R15
+   \   000026   D324         JEQ     ??Resistor_Menu_Process_9
+   \   000028   1F83         SUB.W   #0x1, R15
+   \   00002A   EB24         JEQ     ??Resistor_Menu_Process_10
+   \   00002C   1001         RETA
+     72            case RES_ONE:
+     73              strcpy(display_line[line2], "  Black   ");
+   \                     ??Resistor_Menu_Process_1:
+   \   00002E   3D40....     MOV.W   #`?<Constant "  Black   ">`, R13
+   \   000032   3C40....     MOV.W   #display_line + 11, R12
+   \   000036   ........     CALLA   #strcpy
+     74              update_string(display_line[line2], line2);
+   \   00003A   1D43         MOV.W   #0x1, R13
+   \   00003C   3C40....     MOV.W   #display_line + 11, R12
+   \   000040   ........     CALLA   #update_string
+     75              strcpy(display_line[line4], "    0     ");
+   \   000044   3D40....     MOV.W   #`?<Constant "    0     ">`, R13
+   \   000048   3C40....     MOV.W   #display_line + 33, R12
+   \   00004C   ........     CALLA   #strcpy
+     76              update_string(display_line[line4], line4);
+   \   000050   3D400300     MOV.W   #0x3, R13
+   \   000054   3C40....     MOV.W   #display_line + 33, R12
+   \   000058   ........     CALLA   #update_string
+     77              display_changed = TRUE;
+   \   00005C   D243....     MOV.B   #0x1, &display_changed
+     78              break;
+   \   000060   1001         RETA
+     79            case RES_TWO:
+     80              strcpy(display_line[line2], "  Brown   ");
+   \                     ??Resistor_Menu_Process_2:
+   \   000062   3D40....     MOV.W   #`?<Constant "  Brown   ">`, R13
+   \   000066   3C40....     MOV.W   #display_line + 11, R12
+   \   00006A   ........     CALLA   #strcpy
+     81              update_string(display_line[line2], line2);
+   \   00006E   1D43         MOV.W   #0x1, R13
+   \   000070   3C40....     MOV.W   #display_line + 11, R12
+   \   000074   ........     CALLA   #update_string
+     82              strcpy(display_line[line4], "    1     ");
+   \   000078   3D40....     MOV.W   #`?<Constant "    1     ">`, R13
+   \   00007C   3C40....     MOV.W   #display_line + 33, R12
+   \   000080   ........     CALLA   #strcpy
+     83              update_string(display_line[line4], line4);
+   \   000084   3D400300     MOV.W   #0x3, R13
+   \   000088   3C40....     MOV.W   #display_line + 33, R12
+   \   00008C   ........     CALLA   #update_string
+     84              display_changed = TRUE;
+   \   000090   D243....     MOV.B   #0x1, &display_changed
+     85              break;
+   \   000094   1001         RETA
+     86            case RES_THREE:
+     87              strcpy(display_line[line2], "  Red     ");
+   \                     ??Resistor_Menu_Process_3:
+   \   000096   3D40....     MOV.W   #`?<Constant "  Red     ">`, R13
+   \   00009A   3C40....     MOV.W   #display_line + 11, R12
+   \   00009E   ........     CALLA   #strcpy
+     88              update_string(display_line[line2], line2);
+   \   0000A2   1D43         MOV.W   #0x1, R13
+   \   0000A4   3C40....     MOV.W   #display_line + 11, R12
+   \   0000A8   ........     CALLA   #update_string
+     89              strcpy(display_line[line4], "    2     ");
+   \   0000AC   3D40....     MOV.W   #`?<Constant "    2     ">`, R13
+   \   0000B0   3C40....     MOV.W   #display_line + 33, R12
+   \   0000B4   ........     CALLA   #strcpy
+     90              update_string(display_line[line4], line4);
+   \   0000B8   3D400300     MOV.W   #0x3, R13
+   \   0000BC   3C40....     MOV.W   #display_line + 33, R12
+   \   0000C0   ........     CALLA   #update_string
+     91              display_changed = TRUE;
+   \   0000C4   D243....     MOV.B   #0x1, &display_changed
+     92              break;
+   \   0000C8   1001         RETA
+     93            case RES_FOUR:
+     94              strcpy(display_line[line2], "  Orange  ");
+   \                     ??Resistor_Menu_Process_4:
+   \   0000CA   3D40....     MOV.W   #`?<Constant "  Orange  ">`, R13
+   \   0000CE   3C40....     MOV.W   #display_line + 11, R12
+   \   0000D2   ........     CALLA   #strcpy
+     95              update_string(display_line[line2], line2);
+   \   0000D6   1D43         MOV.W   #0x1, R13
+   \   0000D8   3C40....     MOV.W   #display_line + 11, R12
+   \   0000DC   ........     CALLA   #update_string
+     96              strcpy(display_line[line4], "    3     ");
+   \   0000E0   3D40....     MOV.W   #`?<Constant "    3     ">`, R13
+   \   0000E4   3C40....     MOV.W   #display_line + 33, R12
+   \   0000E8   ........     CALLA   #strcpy
+     97              update_string(display_line[line4], line4);
+   \   0000EC   3D400300     MOV.W   #0x3, R13
+   \   0000F0   3C40....     MOV.W   #display_line + 33, R12
+   \   0000F4   ........     CALLA   #update_string
+     98              display_changed = TRUE;
+   \   0000F8   D243....     MOV.B   #0x1, &display_changed
+     99              break;
+   \   0000FC   1001         RETA
+    100            case RES_FIVE:
+    101              strcpy(display_line[line2], "  Yellow  ");
+   \                     ??Resistor_Menu_Process_5:
+   \   0000FE   3D40....     MOV.W   #`?<Constant "  Yellow  ">`, R13
+   \   000102   3C40....     MOV.W   #display_line + 11, R12
+   \   000106   ........     CALLA   #strcpy
+    102              update_string(display_line[line2], line2);
+   \   00010A   1D43         MOV.W   #0x1, R13
+   \   00010C   3C40....     MOV.W   #display_line + 11, R12
+   \   000110   ........     CALLA   #update_string
+    103              strcpy(display_line[line4], "    4     ");
+   \   000114   3D40....     MOV.W   #`?<Constant "    4     ">`, R13
+   \   000118   3C40....     MOV.W   #display_line + 33, R12
+   \   00011C   ........     CALLA   #strcpy
+    104              update_string(display_line[line4], line4);
+   \   000120   3D400300     MOV.W   #0x3, R13
+   \   000124   3C40....     MOV.W   #display_line + 33, R12
+   \   000128   ........     CALLA   #update_string
+    105              display_changed = TRUE;
+   \   00012C   D243....     MOV.B   #0x1, &display_changed
+    106              break;
+   \   000130   1001         RETA
+    107            case RES_SIX:
+    108              strcpy(display_line[line2], "  Green   ");
+   \                     ??Resistor_Menu_Process_6:
+   \   000132   3D40....     MOV.W   #`?<Constant "  Green   ">`, R13
+   \   000136   3C40....     MOV.W   #display_line + 11, R12
+   \   00013A   ........     CALLA   #strcpy
+    109              update_string(display_line[line2], line2);
+   \   00013E   1D43         MOV.W   #0x1, R13
+   \   000140   3C40....     MOV.W   #display_line + 11, R12
+   \   000144   ........     CALLA   #update_string
+    110              strcpy(display_line[line4], "    5     ");
+   \   000148   3D40....     MOV.W   #`?<Constant "    5     ">`, R13
+   \   00014C   3C40....     MOV.W   #display_line + 33, R12
+   \   000150   ........     CALLA   #strcpy
+    111              update_string(display_line[line4], line4);
+   \   000154   3D400300     MOV.W   #0x3, R13
+   \   000158   3C40....     MOV.W   #display_line + 33, R12
+   \   00015C   ........     CALLA   #update_string
+    112              display_changed = TRUE;
+   \   000160   D243....     MOV.B   #0x1, &display_changed
+    113              break;
+   \   000164   1001         RETA
+    114            case RES_SEVEN:
+    115              strcpy(display_line[line2], "  Blue    ");
+   \                     ??Resistor_Menu_Process_7:
+   \   000166   3D40....     MOV.W   #`?<Constant "  Blue    ">`, R13
+   \   00016A   3C40....     MOV.W   #display_line + 11, R12
+   \   00016E   ........     CALLA   #strcpy
+    116              update_string(display_line[line2], line2);
+   \   000172   1D43         MOV.W   #0x1, R13
+   \   000174   3C40....     MOV.W   #display_line + 11, R12
+   \   000178   ........     CALLA   #update_string
+    117              strcpy(display_line[line4], "    6     ");
+   \   00017C   3D40....     MOV.W   #`?<Constant "    6     ">`, R13
+   \   000180   3C40....     MOV.W   #display_line + 33, R12
+   \   000184   ........     CALLA   #strcpy
+    118              update_string(display_line[line4], line4);
+   \   000188   3D400300     MOV.W   #0x3, R13
+   \   00018C   3C40....     MOV.W   #display_line + 33, R12
+   \   000190   ........     CALLA   #update_string
+    119              display_changed = TRUE;
+   \   000194   D243....     MOV.B   #0x1, &display_changed
+    120              break;
+   \   000198   1001         RETA
+    121            case RES_EIGHT:
+    122              strcpy(display_line[line2], "  Violet  ");
+   \                     ??Resistor_Menu_Process_8:
+   \   00019A   3D40....     MOV.W   #`?<Constant "  Violet  ">`, R13
+   \   00019E   3C40....     MOV.W   #display_line + 11, R12
+   \   0001A2   ........     CALLA   #strcpy
+    123              update_string(display_line[line2], line2);
+   \   0001A6   1D43         MOV.W   #0x1, R13
+   \   0001A8   3C40....     MOV.W   #display_line + 11, R12
+   \   0001AC   ........     CALLA   #update_string
+    124              strcpy(display_line[line4], "    7     ");
+   \   0001B0   3D40....     MOV.W   #`?<Constant "    7     ">`, R13
+   \   0001B4   3C40....     MOV.W   #display_line + 33, R12
+   \   0001B8   ........     CALLA   #strcpy
+    125              update_string(display_line[line4], line4);
+   \   0001BC   3D400300     MOV.W   #0x3, R13
+   \   0001C0   3C40....     MOV.W   #display_line + 33, R12
+   \   0001C4   ........     CALLA   #update_string
+    126              display_changed = TRUE;
+   \   0001C8   D243....     MOV.B   #0x1, &display_changed
+    127              break;
+   \   0001CC   1001         RETA
+    128            case RES_NINE:
+    129              strcpy(display_line[line2], "   Gray   ");
+   \                     ??Resistor_Menu_Process_9:
+   \   0001CE   3D40....     MOV.W   #`?<Constant "   Gray   ">`, R13
+   \   0001D2   3C40....     MOV.W   #display_line + 11, R12
+   \   0001D6   ........     CALLA   #strcpy
+    130              update_string(display_line[line2], line2);
+   \   0001DA   1D43         MOV.W   #0x1, R13
+   \   0001DC   3C40....     MOV.W   #display_line + 11, R12
+   \   0001E0   ........     CALLA   #update_string
+    131              strcpy(display_line[line4], "    8     ");
+   \   0001E4   3D40....     MOV.W   #`?<Constant "    8     ">`, R13
+   \   0001E8   3C40....     MOV.W   #display_line + 33, R12
+   \   0001EC   ........     CALLA   #strcpy
+    132              update_string(display_line[line4], line4);
+   \   0001F0   3D400300     MOV.W   #0x3, R13
+   \   0001F4   3C40....     MOV.W   #display_line + 33, R12
+   \   0001F8   ........     CALLA   #update_string
+    133              display_changed = TRUE;
+   \   0001FC   D243....     MOV.B   #0x1, &display_changed
+    134              break;
+   \   000200   1001         RETA
+    135            case RES_TEN:
+    136              strcpy(display_line[line2], "   White  ");
+   \                     ??Resistor_Menu_Process_10:
+   \   000202   3D40....     MOV.W   #`?<Constant "   White  ">`, R13
+   \   000206   3C40....     MOV.W   #display_line + 11, R12
+   \   00020A   ........     CALLA   #strcpy
+    137              update_string(display_line[line2], line2);
+   \   00020E   1D43         MOV.W   #0x1, R13
+   \   000210   3C40....     MOV.W   #display_line + 11, R12
+   \   000214   ........     CALLA   #update_string
+    138              strcpy(display_line[line4], "    9     ");
+   \   000218   3D40....     MOV.W   #`?<Constant "    9     ">`, R13
+   \   00021C   3C40....     MOV.W   #display_line + 33, R12
+   \   000220   ........     CALLA   #strcpy
+    139              update_string(display_line[line4], line4);
+   \   000224   3D400300     MOV.W   #0x3, R13
+   \   000228   3C40....     MOV.W   #display_line + 33, R12
+   \   00022C   ........     CALLA   #update_string
+    140              display_changed = TRUE;
+   \   000230   D243....     MOV.B   #0x1, &display_changed
+    141              break;
+    142            default: break;
+    143            }
+    144          }
+   \   000234   1001         RETA
+    145          
+
+   \                                 In  segment CODE, align 2
+    146          void Resistor_Scroll(void){
+   \                     Resistor_Scroll:
+    147            if(Button_Two){
+   \   000000   8293....     CMP.W   #0x0, &Button_Two
+   \   000004   0624         JEQ     ??Resistor_Scroll_0
+    148              clear_line2();
+   \   000006   ........     CALLA   #clear_line2
+    149              menu_state = MAIN;
+   \   00000A   8243....     MOV.W   #0x0, &menu_state
+    150              Button_Two = FALSE;
+   \   00000E   8243....     MOV.W   #0x0, &Button_Two
+    151            }
+    152            if(ADC_Thumb <= RES_MENU_ONE){
+   \                     ??Resistor_Scroll_0:
+   \   000012   B2909B01.... CMP.W   #0x19b, &ADC_Thumb
+   \   000018   022C         JC      ??Resistor_Scroll_1
+    153              menu_display = RES_ONE;
+   \   00001A   8243....     MOV.W   #0x0, &menu_display
+    154            }
+    155            if(ADC_Thumb > RES_MENU_ONE && ADC_Thumb <= RES_MENU_TWO){
+   \                     ??Resistor_Scroll_1:
+   \   00001E   B2909B01.... CMP.W   #0x19b, &ADC_Thumb
+   \   000024   0628         JNC     ??Resistor_Scroll_2
+   \   000026   B2903503.... CMP.W   #0x335, &ADC_Thumb
+   \   00002C   022C         JC      ??Resistor_Scroll_2
+    156              menu_display = RES_TWO;
+   \   00002E   9243....     MOV.W   #0x1, &menu_display
+    157            }
+    158            if(ADC_Thumb > RES_MENU_TWO && ADC_Thumb <= RES_MENU_THREE){
+   \                     ??Resistor_Scroll_2:
+   \   000032   B2903503.... CMP.W   #0x335, &ADC_Thumb
+   \   000038   0628         JNC     ??Resistor_Scroll_3
+   \   00003A   B290CF04.... CMP.W   #0x4cf, &ADC_Thumb
+   \   000040   022C         JC      ??Resistor_Scroll_3
+    159              menu_display = RES_THREE;
+   \   000042   A243....     MOV.W   #0x2, &menu_display
+    160            }
+    161            if(ADC_Thumb > RES_MENU_THREE && ADC_Thumb <= RES_MENU_FOUR){
+   \                     ??Resistor_Scroll_3:
+   \   000046   B290CF04.... CMP.W   #0x4cf, &ADC_Thumb
+   \   00004C   0728         JNC     ??Resistor_Scroll_4
+   \   00004E   B2906906.... CMP.W   #0x669, &ADC_Thumb
+   \   000054   032C         JC      ??Resistor_Scroll_4
+    162              menu_display = RES_FOUR;
+   \   000056   B2400300.... MOV.W   #0x3, &menu_display
+    163            }
+    164            if(ADC_Thumb > RES_MENU_FOUR && ADC_Thumb <= RES_MENU_FIVE){
+   \                     ??Resistor_Scroll_4:
+   \   00005C   B2906906.... CMP.W   #0x669, &ADC_Thumb
+   \   000062   0628         JNC     ??Resistor_Scroll_5
+   \   000064   B2900308.... CMP.W   #0x803, &ADC_Thumb
+   \   00006A   022C         JC      ??Resistor_Scroll_5
+    165              menu_display = RES_FIVE;
+   \   00006C   A242....     MOV.W   #0x4, &menu_display
+    166            }
+    167            if(ADC_Thumb > RES_MENU_FIVE && ADC_Thumb <= RES_MENU_SIX){
+   \                     ??Resistor_Scroll_5:
+   \   000070   B2900308.... CMP.W   #0x803, &ADC_Thumb
+   \   000076   0728         JNC     ??Resistor_Scroll_6
+   \   000078   B2909D09.... CMP.W   #0x99d, &ADC_Thumb
+   \   00007E   032C         JC      ??Resistor_Scroll_6
+    168              menu_display = RES_SIX;
+   \   000080   B2400500.... MOV.W   #0x5, &menu_display
+    169            }
+    170            if(ADC_Thumb > RES_MENU_SIX && ADC_Thumb <= RES_MENU_SEVEN){
+   \                     ??Resistor_Scroll_6:
+   \   000086   B2909D09.... CMP.W   #0x99d, &ADC_Thumb
+   \   00008C   0728         JNC     ??Resistor_Scroll_7
+   \   00008E   B290370B.... CMP.W   #0xb37, &ADC_Thumb
+   \   000094   032C         JC      ??Resistor_Scroll_7
+    171              menu_display = RES_SEVEN;
+   \   000096   B2400600.... MOV.W   #0x6, &menu_display
+    172            }
+    173            if(ADC_Thumb > RES_MENU_SEVEN && ADC_Thumb <= RES_MENU_EIGHT){
+   \                     ??Resistor_Scroll_7:
+   \   00009C   B290370B.... CMP.W   #0xb37, &ADC_Thumb
+   \   0000A2   0728         JNC     ??Resistor_Scroll_8
+   \   0000A4   B290D10C.... CMP.W   #0xcd1, &ADC_Thumb
+   \   0000AA   032C         JC      ??Resistor_Scroll_8
+    174              menu_display = RES_EIGHT;
+   \   0000AC   B2400700.... MOV.W   #0x7, &menu_display
+    175            }
+    176            if(ADC_Thumb > RES_MENU_EIGHT && ADC_Thumb <= RES_MENU_NINE){
+   \                     ??Resistor_Scroll_8:
+   \   0000B2   B290D10C.... CMP.W   #0xcd1, &ADC_Thumb
+   \   0000B8   0628         JNC     ??Resistor_Scroll_9
+   \   0000BA   B2906B0E.... CMP.W   #0xe6b, &ADC_Thumb
+   \   0000C0   022C         JC      ??Resistor_Scroll_9
+    177              menu_display = RES_NINE;
+   \   0000C2   B242....     MOV.W   #0x8, &menu_display
+    178            }
+    179            if(ADC_Thumb > RES_MENU_NINE && ADC_Thumb <= RES_MENU_TEN){
+   \                     ??Resistor_Scroll_9:
+   \   0000C6   B2906B0E.... CMP.W   #0xe6b, &ADC_Thumb
+   \   0000CC   0728         JNC     ??Resistor_Scroll_10
+   \   0000CE   B2900510.... CMP.W   #0x1005, &ADC_Thumb
+   \   0000D4   032C         JC      ??Resistor_Scroll_10
+    180              menu_display = RES_TEN;
+   \   0000D6   B2400900.... MOV.W   #0x9, &menu_display
+    181            }
+    182          }
+   \                     ??Resistor_Scroll_10:
+   \   0000DC   1001         RETA
+    183          
+
+   \                                 In  segment CODE, align 2
+    184          void main_menu(void){
+   \                     main_menu:
+    185            main_menu_state = ADC_Thumb >> SHIFT_TEN;                      // right shift so there are 2 bits (4 values)
+   \   000000   1F42....     MOV.W   &ADC_Thumb, R15
+   \   000004   8F10         SWPB    R15
+   \   000006   3FF0FF00     AND.W   #0xff, R15
+   \   00000A   0F11         RRA.W   R15
+   \   00000C   0F11         RRA.W   R15
+   \   00000E   824F....     MOV.W   R15, &main_menu_state
+    186            switch(main_menu_state){
+   \   000012   1F42....     MOV.W   &main_menu_state, R15
+   \   000016   1F83         SUB.W   #0x1, R15
+   \   000018   0524         JEQ     ??main_menu_5
+   \   00001A   1F83         SUB.W   #0x1, R15
+   \   00001C   1824         JEQ     ??main_menu_6
+   \   00001E   1F83         SUB.W   #0x1, R15
+   \   000020   2B24         JEQ     ??main_menu_7
+   \   000022   403C         JMP     ??main_menu_4
+    187            case RESISTORS:
+    188              strcpy(display_line[line2], " Resistors");
+   \                     ??main_menu_5:
+   \   000024   3D40....     MOV.W   #`?<Constant " Resistors">`, R13
+   \   000028   3C40....     MOV.W   #display_line + 11, R12
+   \   00002C   ........     CALLA   #strcpy
+    189              update_string(display_line[line2], line2);
+   \   000030   1D43         MOV.W   #0x1, R13
+   \   000032   3C40....     MOV.W   #display_line + 11, R12
+   \   000036   ........     CALLA   #update_string
+    190              display_changed = TRUE;
+   \   00003A   D243....     MOV.B   #0x1, &display_changed
+    191              
+    192              if(Button_One){
+   \   00003E   8293....     CMP.W   #0x0, &Button_One
+   \   000042   4424         JEQ     ??main_menu_0
+    193                menu_state = RESISTORS;
+   \   000044   9243....     MOV.W   #0x1, &menu_state
+    194                Button_One = FALSE;
+   \   000048   8243....     MOV.W   #0x0, &Button_One
+    195              }
+    196              break;
+   \   00004C   1001         RETA
+    197            case SHAPES:
+    198              strcpy(display_line[line2], "  Shapes  ");
+   \                     ??main_menu_6:
+   \   00004E   3D40....     MOV.W   #`?<Constant "  Shapes  ">`, R13
+   \   000052   3C40....     MOV.W   #display_line + 11, R12
+   \   000056   ........     CALLA   #strcpy
+    199              update_string(display_line[line2], line2);
+   \   00005A   1D43         MOV.W   #0x1, R13
+   \   00005C   3C40....     MOV.W   #display_line + 11, R12
+   \   000060   ........     CALLA   #update_string
+    200              display_changed = TRUE;
+   \   000064   D243....     MOV.B   #0x1, &display_changed
+    201              
+    202              if(Button_One){
+   \   000068   8293....     CMP.W   #0x0, &Button_One
+   \   00006C   2F24         JEQ     ??main_menu_0
+    203                menu_state = SHAPES;
+   \   00006E   A243....     MOV.W   #0x2, &menu_state
+    204                Button_One = FALSE;
+   \   000072   8243....     MOV.W   #0x0, &Button_One
+    205              }
+    206              break;
+   \   000076   1001         RETA
+    207            case SONG:
+    208              strcpy(display_line[line2], "   Song   ");
+   \                     ??main_menu_7:
+   \   000078   3D40....     MOV.W   #`?<Constant "   Song   ">`, R13
+   \   00007C   3C40....     MOV.W   #display_line + 11, R12
+   \   000080   ........     CALLA   #strcpy
+    209              update_string(display_line[line2], line2);
+   \   000084   1D43         MOV.W   #0x1, R13
+   \   000086   3C40....     MOV.W   #display_line + 11, R12
+   \   00008A   ........     CALLA   #update_string
+    210              display_changed = TRUE;
+   \   00008E   D243....     MOV.B   #0x1, &display_changed
+    211              if(Button_One){
+   \   000092   8293....     CMP.W   #0x0, &Button_One
+   \   000096   1A24         JEQ     ??main_menu_0
+    212                menu_state = SONG;
+   \   000098   B2400300.... MOV.W   #0x3, &menu_state
+    213                Button_One = FALSE;
+   \   00009E   8243....     MOV.W   #0x0, &Button_One
+    214              }
+    215              break;
+   \   0000A2   1001         RETA
+    216            default:
+    217                strcpy(display_line[line2], " Resistors");
+   \                     ??main_menu_4:
+   \   0000A4   3D40....     MOV.W   #`?<Constant " Resistors">`, R13
+   \   0000A8   3C40....     MOV.W   #display_line + 11, R12
+   \   0000AC   ........     CALLA   #strcpy
+    218                update_string(display_line[line2], line2);
+   \   0000B0   1D43         MOV.W   #0x1, R13
+   \   0000B2   3C40....     MOV.W   #display_line + 11, R12
+   \   0000B6   ........     CALLA   #update_string
+    219                display_changed = TRUE;
+   \   0000BA   D243....     MOV.B   #0x1, &display_changed
+    220                
+    221                if(Button_One){
+   \   0000BE   8293....     CMP.W   #0x0, &Button_One
+   \   0000C2   0424         JEQ     ??main_menu_0
+    222                  menu_state = RESISTORS;
+   \   0000C4   9243....     MOV.W   #0x1, &menu_state
+    223                  Button_One = FALSE;
+   \   0000C8   8243....     MOV.W   #0x0, &Button_One
+    224                }
+    225              break;
+    226            }
+    227          }
+   \                     ??main_menu_0:
+   \   0000CC   1001         RETA
+    228          
+
+   \                                 In  segment CODE, align 2
+    229          void Shapes_Scroll(void){
+   \                     Shapes_Scroll:
+    230            if(Button_Two){
+   \   000000   8293....     CMP.W   #0x0, &Button_Two
+   \   000004   0424         JEQ     ??Shapes_Scroll_0
+    231              menu_state = MAIN;
+   \   000006   8243....     MOV.W   #0x0, &menu_state
+    232              Button_Two = FALSE;
+   \   00000A   8243....     MOV.W   #0x0, &Button_Two
+    233            }
+    234            if(ADC_Thumb <= SHAPE_MENU_ONE){
+   \                     ??Shapes_Scroll_0:
+   \   00000E   B2909B01.... CMP.W   #0x19b, &ADC_Thumb
+   \   000014   022C         JC      ??Shapes_Scroll_1
+    235              menu_display = CIRCLE;
+   \   000016   8243....     MOV.W   #0x0, &menu_display
+    236            }
+    237            if(ADC_Thumb > SHAPE_MENU_ONE && ADC_Thumb <= SHAPE_MENU_TWO){
+   \                     ??Shapes_Scroll_1:
+   \   00001A   B2909B01.... CMP.W   #0x19b, &ADC_Thumb
+   \   000020   0628         JNC     ??Shapes_Scroll_2
+   \   000022   B2903503.... CMP.W   #0x335, &ADC_Thumb
+   \   000028   022C         JC      ??Shapes_Scroll_2
+    238              menu_display = SQUARE;
+   \   00002A   9243....     MOV.W   #0x1, &menu_display
+    239            }
+    240            if(ADC_Thumb > SHAPE_MENU_TWO && ADC_Thumb <= SHAPE_MENU_THREE){
+   \                     ??Shapes_Scroll_2:
+   \   00002E   B2903503.... CMP.W   #0x335, &ADC_Thumb
+   \   000034   0628         JNC     ??Shapes_Scroll_3
+   \   000036   B290CF04.... CMP.W   #0x4cf, &ADC_Thumb
+   \   00003C   022C         JC      ??Shapes_Scroll_3
+    241              menu_display = TRIANGLE;
+   \   00003E   A243....     MOV.W   #0x2, &menu_display
+    242            }
+    243            if(ADC_Thumb > SHAPE_MENU_THREE && ADC_Thumb <= SHAPE_MENU_FOUR){
+   \                     ??Shapes_Scroll_3:
+   \   000042   B290CF04.... CMP.W   #0x4cf, &ADC_Thumb
+   \   000048   0728         JNC     ??Shapes_Scroll_4
+   \   00004A   B2906906.... CMP.W   #0x669, &ADC_Thumb
+   \   000050   032C         JC      ??Shapes_Scroll_4
+    244              menu_display = OCTAGON;
+   \   000052   B2400300.... MOV.W   #0x3, &menu_display
+    245            }
+    246            if(ADC_Thumb > SHAPE_MENU_FOUR && ADC_Thumb <= SHAPE_MENU_FIVE){
+   \                     ??Shapes_Scroll_4:
+   \   000058   B2906906.... CMP.W   #0x669, &ADC_Thumb
+   \   00005E   0628         JNC     ??Shapes_Scroll_5
+   \   000060   B2900308.... CMP.W   #0x803, &ADC_Thumb
+   \   000066   022C         JC      ??Shapes_Scroll_5
+    247              menu_display = PENTAGON;
+   \   000068   A242....     MOV.W   #0x4, &menu_display
+    248            }
+    249            if(ADC_Thumb > SHAPE_MENU_FIVE && ADC_Thumb <= SHAPE_MENU_SIX){
+   \                     ??Shapes_Scroll_5:
+   \   00006C   B2900308.... CMP.W   #0x803, &ADC_Thumb
+   \   000072   0728         JNC     ??Shapes_Scroll_6
+   \   000074   B2909D09.... CMP.W   #0x99d, &ADC_Thumb
+   \   00007A   032C         JC      ??Shapes_Scroll_6
+    250              menu_display = HEXAGON;
+   \   00007C   B2400500.... MOV.W   #0x5, &menu_display
+    251            }
+    252            if(ADC_Thumb > SHAPE_MENU_SIX && ADC_Thumb <= SHAPE_MENU_SEVEN){
+   \                     ??Shapes_Scroll_6:
+   \   000082   B2909D09.... CMP.W   #0x99d, &ADC_Thumb
+   \   000088   0728         JNC     ??Shapes_Scroll_7
+   \   00008A   B290370B.... CMP.W   #0xb37, &ADC_Thumb
+   \   000090   032C         JC      ??Shapes_Scroll_7
+    253              menu_display = CUBE;
+   \   000092   B2400600.... MOV.W   #0x6, &menu_display
+    254            }
+    255            if(ADC_Thumb > SHAPE_MENU_SEVEN && ADC_Thumb <= SHAPE_MENU_EIGHT){
+   \                     ??Shapes_Scroll_7:
+   \   000098   B290370B.... CMP.W   #0xb37, &ADC_Thumb
+   \   00009E   0728         JNC     ??Shapes_Scroll_8
+   \   0000A0   B290D10C.... CMP.W   #0xcd1, &ADC_Thumb
+   \   0000A6   032C         JC      ??Shapes_Scroll_8
+    256              menu_display = OVAL;
+   \   0000A8   B2400700.... MOV.W   #0x7, &menu_display
+    257            }
+    258            if(ADC_Thumb > SHAPE_MENU_EIGHT && ADC_Thumb <= SHAPE_MENU_NINE){
+   \                     ??Shapes_Scroll_8:
+   \   0000AE   B290D10C.... CMP.W   #0xcd1, &ADC_Thumb
+   \   0000B4   0628         JNC     ??Shapes_Scroll_9
+   \   0000B6   B2906B0E.... CMP.W   #0xe6b, &ADC_Thumb
+   \   0000BC   022C         JC      ??Shapes_Scroll_9
+    259              menu_display = SPHERE;
+   \   0000BE   B242....     MOV.W   #0x8, &menu_display
+    260            }
+    261            if(ADC_Thumb > SHAPE_MENU_NINE && ADC_Thumb <= SHAPE_MENU_TEN){
+   \                     ??Shapes_Scroll_9:
+   \   0000C2   B2906B0E.... CMP.W   #0xe6b, &ADC_Thumb
+   \   0000C8   0728         JNC     ??Shapes_Scroll_10
+   \   0000CA   B2900510.... CMP.W   #0x1005, &ADC_Thumb
+   \   0000D0   032C         JC      ??Shapes_Scroll_10
+    262              menu_display = CYLINDER;
+   \   0000D2   B2400900.... MOV.W   #0x9, &menu_display
+    263            }
+    264          }
+   \                     ??Shapes_Scroll_10:
+   \   0000D8   1001         RETA
+    265          
+
+   \                                 In  segment CODE, align 2
+    266          void Shapes_Menu_Process(void){
+   \                     Shapes_Menu_Process:
+    267           switch(menu_display){
+   \   000000   1F42....     MOV.W   &menu_display, R15
+   \   000004   0F83         SUB.W   #0x0, R15
+   \   000006   1324         JEQ     ??Shapes_Menu_Process_1
+   \   000008   1F83         SUB.W   #0x1, R15
+   \   00000A   3324         JEQ     ??Shapes_Menu_Process_2
+   \   00000C   1F83         SUB.W   #0x1, R15
+   \   00000E   5324         JEQ     ??Shapes_Menu_Process_3
+   \   000010   1F83         SUB.W   #0x1, R15
+   \   000012   7324         JEQ     ??Shapes_Menu_Process_4
+   \   000014   1F83         SUB.W   #0x1, R15
+   \   000016   9324         JEQ     ??Shapes_Menu_Process_5
+   \   000018   1F83         SUB.W   #0x1, R15
+   \   00001A   B324         JEQ     ??Shapes_Menu_Process_6
+   \   00001C   1F83         SUB.W   #0x1, R15
+   \   00001E   D324         JEQ     ??Shapes_Menu_Process_7
+   \   000020   1F83         SUB.W   #0x1, R15
+   \   000022   F324         JEQ     ??Shapes_Menu_Process_8
+   \   000024   1F83         SUB.W   #0x1, R15
+   \   000026   1325         JEQ     ??Shapes_Menu_Process_9
+   \   000028   1F83         SUB.W   #0x1, R15
+   \   00002A   3325         JEQ     ??Shapes_Menu_Process_10
+   \   00002C   1001         RETA
+    268            case CIRCLE:
+    269              strcpy(display_line[line1], "          ");
+   \                     ??Shapes_Menu_Process_1:
+   \   00002E   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   000032   3C40....     MOV.W   #display_line, R12
+   \   000036   ........     CALLA   #strcpy
+    270              update_string(display_line[line1], line1);
+   \   00003A   0D43         MOV.W   #0x0, R13
+   \   00003C   ........     CALLA   #update_string
+    271              strcpy(display_line[line2], "  Circle  ");
+   \   000040   3D40....     MOV.W   #`?<Constant "  Circle  ">`, R13
+   \   000044   3C40....     MOV.W   #display_line + 11, R12
+   \   000048   ........     CALLA   #strcpy
+    272              update_string(display_line[line2], line2);
+   \   00004C   1D43         MOV.W   #0x1, R13
+   \   00004E   3C40....     MOV.W   #display_line + 11, R12
+   \   000052   ........     CALLA   #update_string
+    273              strcpy(display_line[line3], "  Square  ");
+   \   000056   3D40....     MOV.W   #`?<Constant "  Square  ">`, R13
+   \   00005A   3C40....     MOV.W   #display_line + 22, R12
+   \   00005E   ........     CALLA   #strcpy
+    274              update_string(display_line[line3], line3);
+   \   000062   2D43         MOV.W   #0x2, R13
+   \   000064   3C40....     MOV.W   #display_line + 22, R12
+   \   000068   ........     CALLA   #update_string
+    275              display_changed = TRUE;
+   \   00006C   D243....     MOV.B   #0x1, &display_changed
+    276              break;
+   \   000070   1001         RETA
+    277            case SQUARE:
+    278              strcpy(display_line[line1], "  Circle   ");
+   \                     ??Shapes_Menu_Process_2:
+   \   000072   3D40....     MOV.W   #`?<Constant "  Circle   ">`, R13
+   \   000076   3C40....     MOV.W   #display_line, R12
+   \   00007A   ........     CALLA   #strcpy
+    279              update_string(display_line[line1], line1);
+   \   00007E   0D43         MOV.W   #0x0, R13
+   \   000080   ........     CALLA   #update_string
+    280              strcpy(display_line[line2], "  Square  ");
+   \   000084   3D40....     MOV.W   #`?<Constant "  Square  ">`, R13
+   \   000088   3C40....     MOV.W   #display_line + 11, R12
+   \   00008C   ........     CALLA   #strcpy
+    281              update_string(display_line[line2], line2);
+   \   000090   1D43         MOV.W   #0x1, R13
+   \   000092   3C40....     MOV.W   #display_line + 11, R12
+   \   000096   ........     CALLA   #update_string
+    282              strcpy(display_line[line3], " Triangle ");
+   \   00009A   3D40....     MOV.W   #`?<Constant " Triangle ">`, R13
+   \   00009E   3C40....     MOV.W   #display_line + 22, R12
+   \   0000A2   ........     CALLA   #strcpy
+    283              update_string(display_line[line3], line3);
+   \   0000A6   2D43         MOV.W   #0x2, R13
+   \   0000A8   3C40....     MOV.W   #display_line + 22, R12
+   \   0000AC   ........     CALLA   #update_string
+    284              display_changed = TRUE;
+   \   0000B0   D243....     MOV.B   #0x1, &display_changed
+    285              break;
+   \   0000B4   1001         RETA
+    286            case TRIANGLE:
+    287              strcpy(display_line[line1], "  Square  ");
+   \                     ??Shapes_Menu_Process_3:
+   \   0000B6   3D40....     MOV.W   #`?<Constant "  Square  ">`, R13
+   \   0000BA   3C40....     MOV.W   #display_line, R12
+   \   0000BE   ........     CALLA   #strcpy
+    288              update_string(display_line[line1], line1);
+   \   0000C2   0D43         MOV.W   #0x0, R13
+   \   0000C4   ........     CALLA   #update_string
+    289              strcpy(display_line[line2], " Triangle ");
+   \   0000C8   3D40....     MOV.W   #`?<Constant " Triangle ">`, R13
+   \   0000CC   3C40....     MOV.W   #display_line + 11, R12
+   \   0000D0   ........     CALLA   #strcpy
+    290              update_string(display_line[line2], line2);
+   \   0000D4   1D43         MOV.W   #0x1, R13
+   \   0000D6   3C40....     MOV.W   #display_line + 11, R12
+   \   0000DA   ........     CALLA   #update_string
+    291              strcpy(display_line[line3], " Octagon  ");
+   \   0000DE   3D40....     MOV.W   #`?<Constant " Octagon  ">`, R13
+   \   0000E2   3C40....     MOV.W   #display_line + 22, R12
+   \   0000E6   ........     CALLA   #strcpy
+    292              update_string(display_line[line3], line3);
+   \   0000EA   2D43         MOV.W   #0x2, R13
+   \   0000EC   3C40....     MOV.W   #display_line + 22, R12
+   \   0000F0   ........     CALLA   #update_string
+    293              display_changed = TRUE;
+   \   0000F4   D243....     MOV.B   #0x1, &display_changed
+    294              break;
+   \   0000F8   1001         RETA
+    295            case OCTAGON:
+    296              strcpy(display_line[line1], " Triangle ");
+   \                     ??Shapes_Menu_Process_4:
+   \   0000FA   3D40....     MOV.W   #`?<Constant " Triangle ">`, R13
+   \   0000FE   3C40....     MOV.W   #display_line, R12
+   \   000102   ........     CALLA   #strcpy
+    297              update_string(display_line[line1], line1);
+   \   000106   0D43         MOV.W   #0x0, R13
+   \   000108   ........     CALLA   #update_string
+    298              strcpy(display_line[line2], " Octagon  ");
+   \   00010C   3D40....     MOV.W   #`?<Constant " Octagon  ">`, R13
+   \   000110   3C40....     MOV.W   #display_line + 11, R12
+   \   000114   ........     CALLA   #strcpy
+    299              update_string(display_line[line2], line2);
+   \   000118   1D43         MOV.W   #0x1, R13
+   \   00011A   3C40....     MOV.W   #display_line + 11, R12
+   \   00011E   ........     CALLA   #update_string
+    300              strcpy(display_line[line3], " Pentagon ");
+   \   000122   3D40....     MOV.W   #`?<Constant " Pentagon ">`, R13
+   \   000126   3C40....     MOV.W   #display_line + 22, R12
+   \   00012A   ........     CALLA   #strcpy
+    301              update_string(display_line[line3], line3);
+   \   00012E   2D43         MOV.W   #0x2, R13
+   \   000130   3C40....     MOV.W   #display_line + 22, R12
+   \   000134   ........     CALLA   #update_string
+    302              display_changed = TRUE;
+   \   000138   D243....     MOV.B   #0x1, &display_changed
+    303              break;
+   \   00013C   1001         RETA
+    304            case PENTAGON:
+    305              strcpy(display_line[line1], " Octagon  ");
+   \                     ??Shapes_Menu_Process_5:
+   \   00013E   3D40....     MOV.W   #`?<Constant " Octagon  ">`, R13
+   \   000142   3C40....     MOV.W   #display_line, R12
+   \   000146   ........     CALLA   #strcpy
+    306              update_string(display_line[line1], line1);
+   \   00014A   0D43         MOV.W   #0x0, R13
+   \   00014C   ........     CALLA   #update_string
+    307              strcpy(display_line[line2], " Pentagon ");
+   \   000150   3D40....     MOV.W   #`?<Constant " Pentagon ">`, R13
+   \   000154   3C40....     MOV.W   #display_line + 11, R12
+   \   000158   ........     CALLA   #strcpy
+    308              update_string(display_line[line2], line2);
+   \   00015C   1D43         MOV.W   #0x1, R13
+   \   00015E   3C40....     MOV.W   #display_line + 11, R12
+   \   000162   ........     CALLA   #update_string
+    309              strcpy(display_line[line3], " Hexagon  ");
+   \   000166   3D40....     MOV.W   #`?<Constant " Hexagon  ">`, R13
+   \   00016A   3C40....     MOV.W   #display_line + 22, R12
+   \   00016E   ........     CALLA   #strcpy
+    310              update_string(display_line[line3], line3);
+   \   000172   2D43         MOV.W   #0x2, R13
+   \   000174   3C40....     MOV.W   #display_line + 22, R12
+   \   000178   ........     CALLA   #update_string
+    311              display_changed = TRUE;
+   \   00017C   D243....     MOV.B   #0x1, &display_changed
+    312              break;
+   \   000180   1001         RETA
+    313            case HEXAGON:
+    314              strcpy(display_line[line1], " Pentagon ");
+   \                     ??Shapes_Menu_Process_6:
+   \   000182   3D40....     MOV.W   #`?<Constant " Pentagon ">`, R13
+   \   000186   3C40....     MOV.W   #display_line, R12
+   \   00018A   ........     CALLA   #strcpy
+    315              update_string(display_line[line1], line1);
+   \   00018E   0D43         MOV.W   #0x0, R13
+   \   000190   ........     CALLA   #update_string
+    316              strcpy(display_line[line2], " Hexagon  ");
+   \   000194   3D40....     MOV.W   #`?<Constant " Hexagon  ">`, R13
+   \   000198   3C40....     MOV.W   #display_line + 11, R12
+   \   00019C   ........     CALLA   #strcpy
+    317              update_string(display_line[line2], line2);
+   \   0001A0   1D43         MOV.W   #0x1, R13
+   \   0001A2   3C40....     MOV.W   #display_line + 11, R12
+   \   0001A6   ........     CALLA   #update_string
+    318              strcpy(display_line[line3], "  Cube    ");
+   \   0001AA   3D40....     MOV.W   #`?<Constant "  Cube    ">`, R13
+   \   0001AE   3C40....     MOV.W   #display_line + 22, R12
+   \   0001B2   ........     CALLA   #strcpy
+    319              update_string(display_line[line3], line3);
+   \   0001B6   2D43         MOV.W   #0x2, R13
+   \   0001B8   3C40....     MOV.W   #display_line + 22, R12
+   \   0001BC   ........     CALLA   #update_string
+    320              display_changed = TRUE;
+   \   0001C0   D243....     MOV.B   #0x1, &display_changed
+    321              break;
+   \   0001C4   1001         RETA
+    322            case CUBE:
+    323              strcpy(display_line[line1], " Hexagon  ");
+   \                     ??Shapes_Menu_Process_7:
+   \   0001C6   3D40....     MOV.W   #`?<Constant " Hexagon  ">`, R13
+   \   0001CA   3C40....     MOV.W   #display_line, R12
+   \   0001CE   ........     CALLA   #strcpy
+    324              update_string(display_line[line1], line1);
+   \   0001D2   0D43         MOV.W   #0x0, R13
+   \   0001D4   ........     CALLA   #update_string
+    325              strcpy(display_line[line2], "  Cube    ");
+   \   0001D8   3D40....     MOV.W   #`?<Constant "  Cube    ">`, R13
+   \   0001DC   3C40....     MOV.W   #display_line + 11, R12
+   \   0001E0   ........     CALLA   #strcpy
+    326              update_string(display_line[line2], line2);
+   \   0001E4   1D43         MOV.W   #0x1, R13
+   \   0001E6   3C40....     MOV.W   #display_line + 11, R12
+   \   0001EA   ........     CALLA   #update_string
+    327              strcpy(display_line[line3], "   Oval   ");
+   \   0001EE   3D40....     MOV.W   #`?<Constant "   Oval   ">`, R13
+   \   0001F2   3C40....     MOV.W   #display_line + 22, R12
+   \   0001F6   ........     CALLA   #strcpy
+    328              update_string(display_line[line3], line3);
+   \   0001FA   2D43         MOV.W   #0x2, R13
+   \   0001FC   3C40....     MOV.W   #display_line + 22, R12
+   \   000200   ........     CALLA   #update_string
+    329              display_changed = TRUE;
+   \   000204   D243....     MOV.B   #0x1, &display_changed
+    330              break;
+   \   000208   1001         RETA
+    331            case OVAL:
+    332              strcpy(display_line[line1], "  Cube    ");
+   \                     ??Shapes_Menu_Process_8:
+   \   00020A   3D40....     MOV.W   #`?<Constant "  Cube    ">`, R13
+   \   00020E   3C40....     MOV.W   #display_line, R12
+   \   000212   ........     CALLA   #strcpy
+    333              update_string(display_line[line1], line1);
+   \   000216   0D43         MOV.W   #0x0, R13
+   \   000218   ........     CALLA   #update_string
+    334              strcpy(display_line[line2], "   Oval   ");
+   \   00021C   3D40....     MOV.W   #`?<Constant "   Oval   ">`, R13
+   \   000220   3C40....     MOV.W   #display_line + 11, R12
+   \   000224   ........     CALLA   #strcpy
+    335              update_string(display_line[line2], line2);
+   \   000228   1D43         MOV.W   #0x1, R13
+   \   00022A   3C40....     MOV.W   #display_line + 11, R12
+   \   00022E   ........     CALLA   #update_string
+    336              strcpy(display_line[line3], "  Sphere  ");
+   \   000232   3D40....     MOV.W   #`?<Constant "  Sphere  ">`, R13
+   \   000236   3C40....     MOV.W   #display_line + 22, R12
+   \   00023A   ........     CALLA   #strcpy
+    337              update_string(display_line[line3], line3);
+   \   00023E   2D43         MOV.W   #0x2, R13
+   \   000240   3C40....     MOV.W   #display_line + 22, R12
+   \   000244   ........     CALLA   #update_string
+    338              display_changed = TRUE;
+   \   000248   D243....     MOV.B   #0x1, &display_changed
+    339              break;
+   \   00024C   1001         RETA
+    340            case SPHERE:
+    341              strcpy(display_line[line1], "   Oval   ");
+   \                     ??Shapes_Menu_Process_9:
+   \   00024E   3D40....     MOV.W   #`?<Constant "   Oval   ">`, R13
+   \   000252   3C40....     MOV.W   #display_line, R12
+   \   000256   ........     CALLA   #strcpy
+    342              update_string(display_line[line1], line1);
+   \   00025A   0D43         MOV.W   #0x0, R13
+   \   00025C   ........     CALLA   #update_string
+    343              strcpy(display_line[line2], "  Sphere  ");
+   \   000260   3D40....     MOV.W   #`?<Constant "  Sphere  ">`, R13
+   \   000264   3C40....     MOV.W   #display_line + 11, R12
+   \   000268   ........     CALLA   #strcpy
+    344              update_string(display_line[line2], line2);
+   \   00026C   1D43         MOV.W   #0x1, R13
+   \   00026E   3C40....     MOV.W   #display_line + 11, R12
+   \   000272   ........     CALLA   #update_string
+    345              strcpy(display_line[line3], " Cylinder ");
+   \   000276   3D40....     MOV.W   #`?<Constant " Cylinder ">`, R13
+   \   00027A   3C40....     MOV.W   #display_line + 22, R12
+   \   00027E   ........     CALLA   #strcpy
+    346              update_string(display_line[line3], line3);
+   \   000282   2D43         MOV.W   #0x2, R13
+   \   000284   3C40....     MOV.W   #display_line + 22, R12
+   \   000288   ........     CALLA   #update_string
+    347              display_changed = TRUE;
+   \   00028C   D243....     MOV.B   #0x1, &display_changed
+    348              break;
+   \   000290   1001         RETA
+    349            case CYLINDER:
+    350              strcpy(display_line[line1], "  Sphere  ");
+   \                     ??Shapes_Menu_Process_10:
+   \   000292   3D40....     MOV.W   #`?<Constant "  Sphere  ">`, R13
+   \   000296   3C40....     MOV.W   #display_line, R12
+   \   00029A   ........     CALLA   #strcpy
+    351              update_string(display_line[line1], line1);
+   \   00029E   0D43         MOV.W   #0x0, R13
+   \   0002A0   ........     CALLA   #update_string
+    352              strcpy(display_line[line2], " Cylinder ");
+   \   0002A4   3D40....     MOV.W   #`?<Constant " Cylinder ">`, R13
+   \   0002A8   3C40....     MOV.W   #display_line + 11, R12
+   \   0002AC   ........     CALLA   #strcpy
+    353              update_string(display_line[line2], line2);
+   \   0002B0   1D43         MOV.W   #0x1, R13
+   \   0002B2   3C40....     MOV.W   #display_line + 11, R12
+   \   0002B6   ........     CALLA   #update_string
+    354              strcpy(display_line[line3], "          ");
+   \   0002BA   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   0002BE   3C40....     MOV.W   #display_line + 22, R12
+   \   0002C2   ........     CALLA   #strcpy
+    355              update_string(display_line[line3], line3);
+   \   0002C6   2D43         MOV.W   #0x2, R13
+   \   0002C8   3C40....     MOV.W   #display_line + 22, R12
+   \   0002CC   ........     CALLA   #update_string
+    356              display_changed = TRUE;
+   \   0002D0   D243....     MOV.B   #0x1, &display_changed
+    357              break;
+    358            default: break;
+    359           }
+    360          }
+   \   0002D4   1001         RETA
+    361           
+
+   \                                 In  segment CODE, align 2
+    362          void Song_Scroll(void){
+   \                     Song_Scroll:
+    363            if(Button_Two){
+   \   000000   8293....     CMP.W   #0x0, &Button_Two
+   \   000004   0424         JEQ     ??Song_Scroll_2
+    364              menu_state = MAIN;
+   \   000006   8243....     MOV.W   #0x0, &menu_state
+    365              Button_Two = FALSE;
+   \   00000A   8243....     MOV.W   #0x0, &Button_Two
+    366            }
+    367            thumb_val = ADC_Thumb;
+   \                     ??Song_Scroll_2:
+   \   00000E   9242........ MOV.W   &ADC_Thumb, &thumb_val
+    368            if(thumb_val > prev_thumb_val + SCROLL_RANGE){
+   \   000014   1F42....     MOV.W   &prev_thumb_val, R15
+   \   000018   3F500A00     ADD.W   #0xa, R15
+   \   00001C   1F92....     CMP.W   &thumb_val, R15
+   \   000020   7234         JGE     ??Song_Scroll_1
+    369              out_song[0] = song[index];
+   \   000022   1F42....     MOV.W   &index, R15
+   \   000026   D24F........ MOV.B   song(R15), &out_song
+    370              out_song[1] = song[index+1];
+   \   00002C   1F42....     MOV.W   &index, R15
+   \   000030   D24F........ MOV.B   song + 1(R15), &out_song + 1
+    371              out_song[2] = song[index+2];
+   \   000036   1F42....     MOV.W   &index, R15
+   \   00003A   D24F........ MOV.B   song + 2(R15), &out_song + 2
+    372              out_song[3] = song[index+3];
+   \   000040   1F42....     MOV.W   &index, R15
+   \   000044   D24F........ MOV.B   song + 3(R15), &out_song + 3
+    373              out_song[4] = song[index+4];
+   \   00004A   1F42....     MOV.W   &index, R15
+   \   00004E   D24F........ MOV.B   song + 4(R15), &out_song + 4
+    374              out_song[5] = song[index+5];
+   \   000054   1F42....     MOV.W   &index, R15
+   \   000058   D24F........ MOV.B   song + 5(R15), &out_song + 5
+    375              out_song[6] = song[index+6];
+   \   00005E   1F42....     MOV.W   &index, R15
+   \   000062   D24F........ MOV.B   song + 6(R15), &out_song + 6
+    376              out_song[7] = song[index+7];
+   \   000068   1F42....     MOV.W   &index, R15
+   \   00006C   D24F........ MOV.B   song + 7(R15), &out_song + 7
+    377              out_song[8] = song[index+8];
+   \   000072   1F42....     MOV.W   &index, R15
+   \   000076   D24F........ MOV.B   song + 8(R15), &out_song + 8
+    378              out_song[9] = song[index+9];
+   \   00007C   1F42....     MOV.W   &index, R15
+   \   000080   D24F........ MOV.B   song + 9(R15), &out_song + 9
+    379              index++;
+   \   000086   9253....     ADD.W   #0x1, &index
+    380              if(index > sizeof(song) - MAX_STR_SIZE){
+   \   00008A   B290D600.... CMP.W   #0xd6, &index
+   \   000090   0228         JNC     ??Song_Scroll_3
+    381                index = RESET_STATE;
+   \   000092   8243....     MOV.W   #0x0, &index
+    382              }
+    383             
+    384              if(red_white){
+   \                     ??Song_Scroll_3:
+   \   000096   8293....     CMP.W   #0x0, &red_white
+   \   00009A   1724         JEQ     ??Song_Scroll_4
+    385              strcpy(display_line[line1], "    Red   ");
+   \   00009C   3D40....     MOV.W   #`?<Constant "    Red   ">`, R13
+   \   0000A0   3C40....     MOV.W   #display_line, R12
+   \   0000A4   ........     CALLA   #strcpy
+    386              update_string(display_line[line1], line1);
+   \   0000A8   0D43         MOV.W   #0x0, R13
+   \   0000AA   ........     CALLA   #update_string
+    387              strcpy(display_line[line3], "   White  ");
+   \   0000AE   3D40....     MOV.W   #`?<Constant "   White  ">`, R13
+   \   0000B2   3C40....     MOV.W   #display_line + 22, R12
+   \   0000B6   ........     CALLA   #strcpy
+    388              update_string(display_line[line3], line3);
+   \   0000BA   2D43         MOV.W   #0x2, R13
+   \   0000BC   3C40....     MOV.W   #display_line + 22, R12
+   \   0000C0   ........     CALLA   #update_string
+    389              display_changed = TRUE;
+   \   0000C4   D243....     MOV.B   #0x1, &display_changed
+   \   0000C8   163C         JMP     ??Song_Scroll_0
+    390              }
+    391              else{
+    392              strcpy(display_line[line1], "   White  ");
+   \                     ??Song_Scroll_4:
+   \   0000CA   3D40....     MOV.W   #`?<Constant "   White  ">`, R13
+   \   0000CE   3C40....     MOV.W   #display_line, R12
+   \   0000D2   ........     CALLA   #strcpy
+    393              update_string(display_line[line1], line1);
+   \   0000D6   0D43         MOV.W   #0x0, R13
+   \   0000D8   ........     CALLA   #update_string
+    394              strcpy(display_line[line3], "    Red   ");
+   \   0000DC   3D40....     MOV.W   #`?<Constant "    Red   ">`, R13
+   \   0000E0   3C40....     MOV.W   #display_line + 22, R12
+   \   0000E4   ........     CALLA   #strcpy
+    395              update_string(display_line[line3], line3);
+   \   0000E8   2D43         MOV.W   #0x2, R13
+   \   0000EA   3C40....     MOV.W   #display_line + 22, R12
+   \   0000EE   ........     CALLA   #update_string
+    396              display_changed = TRUE;
+   \   0000F2   D243....     MOV.B   #0x1, &display_changed
+    397              }
+    398              red_white = !red_white;
+   \                     ??Song_Scroll_0:
+   \   0000F6   8293....     CMP.W   #0x0, &red_white
+   \   0000FA   0320         JNE     ??Song_Scroll_5
+   \   0000FC   9243....     MOV.W   #0x1, &red_white
+   \   000100   023C         JMP     ??Song_Scroll_1
+   \                     ??Song_Scroll_5:
+   \   000102   8243....     MOV.W   #0x0, &red_white
+    399            }
+    400              strcpy(display_line[line2], out_song);
+   \                     ??Song_Scroll_1:
+   \   000106   3D40....     MOV.W   #out_song, R13
+   \   00010A   3C40....     MOV.W   #display_line + 11, R12
+   \   00010E   ........     CALLA   #strcpy
+    401              update_string(display_line[line2], line2);
+   \   000112   1D43         MOV.W   #0x1, R13
+   \   000114   3C40....     MOV.W   #display_line + 11, R12
+   \   000118   ........     CALLA   #update_string
+    402              display_changed = TRUE; 
+   \   00011C   D243....     MOV.B   #0x1, &display_changed
+    403            prev_thumb_val = thumb_val;
+   \   000120   9242........ MOV.W   &thumb_val, &prev_thumb_val
+    404          }
+   \   000126   1001         RETA
+
+   \                                 In  segment DATA16_ID, align 1, align-sorted
+   \                     `?<Initializer for song>`:
+   \   000000   576527726520 DC8 57H, 65H, 27H, 72H, 65H, 20H, 74H, 68H
+   \            7468        
+   \   000008   652052656420 DC8 65H, 20H, 52H, 65H, 64H, 20H, 61H, 6EH
+   \            616E        
+   \   000010   642057686974 DC8 64H, 20H, 57H, 68H, 69H, 74H, 65H, 20H
+   \            6520        
+   \   000018   66726F6D2053 DC8 66H, 72H, 6FH, 6DH, 20H, 53H, 74H, 61H
+   \            7461        
+   \   000020   746520416E64 DC8 74H, 65H, 20H, 41H, 6EH, 64H, 20H, 77H
+   \            2077        
+   \   000028   65206B6E6F77 DC8 65H, 20H, 6BH, 6EH, 6FH, 77H, 20H, 77H
+   \            2077        
+   \   000030   652061726520 DC8 65H, 20H, 61H, 72H, 65H, 20H, 74H, 68H
+   \            7468        
+   \   000038   652062657374 DC8 65H, 20H, 62H, 65H, 73H, 74H, 2EH, 20H
+   \            2E20        
+   \   000040   412068616E64 DC8 41H, 20H, 68H, 61H, 6EH, 64H, 20H, 62H
+   \            2062        
+   \   000048   6568696E6420 DC8 65H, 68H, 69H, 6EH, 64H, 20H, 6FH, 75H
+   \            6F75        
+   \   000050   72206261636B DC8 72H, 20H, 62H, 61H, 63H, 6BH, 2CH, 20H
+   \            2C20        
+   \   000058   57652063616E DC8 57H, 65H, 20H, 63H, 61H, 6EH, 20H, 74H
+   \            2074        
+   \   000060   616B65206F6E DC8 61H, 6BH, 65H, 20H, 6FH, 6EH, 20H, 61H
+   \            2061        
+   \   000068   6C6C20746865 DC8 6CH, 6CH, 20H, 74H, 68H, 65H, 20H, 72H
+   \            2072        
+   \   000070   6573742E2043 DC8 65H, 73H, 74H, 2EH, 20H, 43H, 6FH, 6DH
+   \            6F6D        
+   \   000078   65206F766572 DC8 65H, 20H, 6FH, 76H, 65H, 72H, 20H, 74H
+   \            2074        
+   \   000080   68652068696C DC8 68H, 65H, 20H, 68H, 69H, 6CH, 6CH, 2CH
+   \            6C2C        
+   \   000088   204361726F6C DC8 20H, 43H, 61H, 72H, 6FH, 6CH, 69H, 6EH
+   \            696E        
+   \   000090   612C20446576 DC8 61H, 2CH, 20H, 44H, 65H, 76H, 69H, 6CH
+   \            696C        
+   \   000098   7320616E6420 DC8 73H, 20H, 61H, 6EH, 64H, 20H, 44H, 65H
+   \            4465        
+   \   0000A0   616373207374 DC8 61H, 63H, 73H, 20H, 73H, 74H, 61H, 6EH
+   \            616E        
+   \   0000A8   6420696E206C DC8 64H, 20H, 69H, 6EH, 20H, 6CH, 69H, 6EH
+   \            696E        
+   \   0000B0   652E20546865 DC8 65H, 2EH, 20H, 54H, 68H, 65H, 20H, 52H
+   \            2052        
+   \   0000B8   656420616E64 DC8 65H, 64H, 20H, 61H, 6EH, 64H, 20H, 57H
+   \            2057        
+   \   0000C0   686974652066 DC8 68H, 69H, 74H, 65H, 20H, 66H, 72H, 6FH
+   \            726F        
+   \   0000C8   6D204E2E432E DC8 6DH, 20H, 4EH, 2EH, 43H, 2EH, 20H, 53H
+   \            2053        
+   \   0000D0   746174652E20 DC8 74H, 61H, 74H, 65H, 2EH, 20H, 47H, 6FH
+   \            476F        
+   \   0000D8   205374617465 DC8 20H, 53H, 74H, 61H, 74H, 65H, 21H, 0
+   \            2100        
+
+   \                                 In  segment DATA16_ID, align 2, align-sorted
+   \                     `?<Initializer for red_white>`:
+   \   000000   0100         DC16 1
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "Color:    ">`:
+   \   000000   436F6C6F723A DC8 "Color:    "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "Value:    ">`:
+   \   000000   56616C75653A DC8 "Value:    "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Black   ">`:
+   \   000000   2020426C6163 DC8 "  Black   "
+   \            6B20202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "    0     ">`:
+   \   000000   202020203020 DC8 "    0     "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Brown   ">`:
+   \   000000   202042726F77 DC8 "  Brown   "
+   \            6E20202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "    1     ">`:
+   \   000000   202020203120 DC8 "    1     "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Red     ">`:
+   \   000000   202052656420 DC8 "  Red     "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "    2     ">`:
+   \   000000   202020203220 DC8 "    2     "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Orange  ">`:
+   \   000000   20204F72616E DC8 "  Orange  "
+   \            6765202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "    3     ">`:
+   \   000000   202020203320 DC8 "    3     "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Yellow  ">`:
+   \   000000   202059656C6C DC8 "  Yellow  "
+   \            6F77202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "    4     ">`:
+   \   000000   202020203420 DC8 "    4     "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Green   ">`:
+   \   000000   202047726565 DC8 "  Green   "
+   \            6E20202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "    5     ">`:
+   \   000000   202020203520 DC8 "    5     "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Blue    ">`:
+   \   000000   2020426C7565 DC8 "  Blue    "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "    6     ">`:
+   \   000000   202020203620 DC8 "    6     "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Violet  ">`:
+   \   000000   202056696F6C DC8 "  Violet  "
+   \            6574202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "    7     ">`:
+   \   000000   202020203720 DC8 "    7     "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "   Gray   ">`:
+   \   000000   202020477261 DC8 "   Gray   "
+   \            7920202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "    8     ">`:
+   \   000000   202020203820 DC8 "    8     "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "   White  ">`:
+   \   000000   202020576869 DC8 "   White  "
+   \            7465202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "    9     ">`:
+   \   000000   202020203920 DC8 "    9     "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " Resistors">`:
+   \   000000   205265736973 DC8 " Resistors"
+   \            746F727300  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Shapes  ">`:
+   \   000000   202053686170 DC8 "  Shapes  "
+   \            6573202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "   Song   ">`:
+   \   000000   202020536F6E DC8 "   Song   "
+   \            6720202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "          ">`:
+   \   000000   202020202020 DC8 "          "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Circle  ">`:
+   \   000000   202043697263 DC8 "  Circle  "
+   \            6C65202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Square  ">`:
+   \   000000   202053717561 DC8 "  Square  "
+   \            7265202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Circle   ">`:
+   \   000000   202043697263 DC8 "  Circle   "
+   \            6C6520202000
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " Triangle ">`:
+   \   000000   20547269616E DC8 " Triangle "
+   \            676C652000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " Octagon  ">`:
+   \   000000   204F63746167 DC8 " Octagon  "
+   \            6F6E202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " Pentagon ">`:
+   \   000000   2050656E7461 DC8 " Pentagon "
+   \            676F6E2000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " Hexagon  ">`:
+   \   000000   204865786167 DC8 " Hexagon  "
+   \            6F6E202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Cube    ">`:
+   \   000000   202043756265 DC8 "  Cube    "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "   Oval   ">`:
+   \   000000   2020204F7661 DC8 "   Oval   "
+   \            6C20202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Sphere  ">`:
+   \   000000   202053706865 DC8 "  Sphere  "
+   \            7265202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " Cylinder ">`:
+   \   000000   2043796C696E DC8 " Cylinder "
+   \            6465722000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "    Red   ">`:
+   \   000000   202020205265 DC8 "    Red   "
+   \            6420202000  
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   Resistor_Menu_Process
+        4   -> strcpy
+        4   -> update_string
+      4   Resistor_Scroll
+        4   -> clear_line2
+      4   Shapes_Menu_Process
+        4   -> strcpy
+        4   -> update_string
+      4   Shapes_Scroll
+      4   Song_Scroll
+        4   -> strcpy
+        4   -> update_string
+      4   main_menu
+        4   -> strcpy
+        4   -> update_string
+      4   menu_process
+        0   -> Resistor_Menu_Process
+        4   -> Resistor_Scroll
+        0   -> Shapes_Menu_Process
+        4   -> Shapes_Scroll
+        0   -> Song_Scroll
+        4   -> clear_line1
+        4   -> clear_line2
+        4   -> clear_line3
+        4   -> lcd_4line
+        4   -> lcd_BIG_mid
+        0   -> main_menu
+        4   -> strcpy
+        4   -> update_string
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      11  ?<Constant "          ">
+      11  ?<Constant "    0     ">
+      11  ?<Constant "    1     ">
+      11  ?<Constant "    2     ">
+      11  ?<Constant "    3     ">
+      11  ?<Constant "    4     ">
+      11  ?<Constant "    5     ">
+      11  ?<Constant "    6     ">
+      11  ?<Constant "    7     ">
+      11  ?<Constant "    8     ">
+      11  ?<Constant "    9     ">
+      11  ?<Constant "    Red   ">
+      11  ?<Constant "   Gray   ">
+      11  ?<Constant "   Oval   ">
+      11  ?<Constant "   Song   ">
+      11  ?<Constant "   White  ">
+      11  ?<Constant "  Black   ">
+      11  ?<Constant "  Blue    ">
+      11  ?<Constant "  Brown   ">
+      12  ?<Constant "  Circle   ">
+      11  ?<Constant "  Circle  ">
+      11  ?<Constant "  Cube    ">
+      11  ?<Constant "  Green   ">
+      11  ?<Constant "  Orange  ">
+      11  ?<Constant "  Red     ">
+      11  ?<Constant "  Shapes  ">
+      11  ?<Constant "  Sphere  ">
+      11  ?<Constant "  Square  ">
+      11  ?<Constant "  Violet  ">
+      11  ?<Constant "  Yellow  ">
+      11  ?<Constant " Cylinder ">
+      11  ?<Constant " Hexagon  ">
+      11  ?<Constant " Octagon  ">
+      11  ?<Constant " Pentagon ">
+      11  ?<Constant " Resistors">
+      11  ?<Constant " Triangle ">
+      11  ?<Constant "Color:    ">
+      11  ?<Constant "Value:    ">
+       2  ?<Initializer for red_white>
+     224  ?<Initializer for song>
+     566  Resistor_Menu_Process
+     222  Resistor_Scroll
+     726  Shapes_Menu_Process
+     218  Shapes_Scroll
+     296  Song_Scroll
+       2  index
+     206  main_menu
+       2  main_menu_state
+       2  menu_display
+     118  menu_process
+       2  menu_state
+      11  out_song
+       2  prev_thumb_val
+       2  red_white
+     224  song
+       2  thumb_val
+
+ 
+ 2 352 bytes in segment CODE
+   419 bytes in segment DATA16_C
+   226 bytes in segment DATA16_I
+   226 bytes in segment DATA16_ID
+    23 bytes in segment DATA16_Z
+ 
+ 2 352 bytes of CODE  memory
+   645 bytes of CONST memory
+   249 bytes of DATA  memory
+
+Errors: none
+Warnings: none

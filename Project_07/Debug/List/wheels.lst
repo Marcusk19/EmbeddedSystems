@@ -1,0 +1,250 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           19/Apr/2020  14:18:48
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_07\wheels.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWDA0A.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_07\wheels.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07\Debug\List\wheels.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07\Debug\Obj\wheels.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_07\wheels.c
+      1          //==============================================================================
+      2          // Filename : wheels.c
+      3          //
+      4          // Description: This file contains the functions for wheel movement
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: February 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          
+     11          #include  "functions.h"
+     12          #include  "msp430.h"
+     13          #include "macros.h"
+     14          
+     15          //GLOBALS=======================================================================
+     16          extern unsigned int myTime;
+     17          int waitCount = RESET_STATE;
+     18          extern unsigned int prevButton;
+     19          extern unsigned int buttonPress;
+     20          extern int wheelCount;
+     21          extern volatile unsigned int wheel_state;
+     22          unsigned int rspeed, lspeed = RESET_STATE;
+     23          unsigned int e = RESET_STATE;
+     24          unsigned int reference = RESET_STATE;
+     25          int current_error, previous_error, sum_error, delta_error = RESET_STATE;
+     26          
+     27          
+     28          //==============================================================================
+     29          
+     30          void stop_Movement(void){
+     31            RIGHT_FORWARD_SPEED = WHEEL_OFF;
+     32            LEFT_FORWARD_SPEED = WHEEL_OFF;
+     33            RIGHT_REVERSE_SPEED = WHEEL_OFF;
+     34            LEFT_REVERSE_SPEED = WHEEL_OFF;
+     35          }
+     36          
+     37          void move_Forward(void){
+     38            RIGHT_REVERSE_SPEED = WHEEL_OFF;          // right reverse off
+     39            LEFT_REVERSE_SPEED = WHEEL_OFF;           // left reverse off
+     40            RIGHT_FORWARD_SPEED = HALF_SPEED;               // right forward on
+     41            LEFT_FORWARD_SPEED = HALF_SPEED;                // left forward on 
+     42          }
+     43          
+     44          void move_Reverse(void){
+     45            RIGHT_FORWARD_SPEED = WHEEL_OFF;          // right foward off
+     46            LEFT_FORWARD_SPEED = WHEEL_OFF;           // left forward off
+     47            RIGHT_REVERSE_SPEED = FAST;               // right reverse on
+     48            LEFT_REVERSE_SPEED = HALF_SPEED;          // left reverse on 
+     49          }
+     50          
+     51          void spin_CW(void){
+     52            RIGHT_FORWARD_SPEED = WHEEL_OFF;          // right forward off
+     53            LEFT_REVERSE_SPEED = WHEEL_OFF;           // left reverese off
+     54            RIGHT_REVERSE_SPEED = FAST;               // right reverse on 
+     55            LEFT_FORWARD_SPEED = SLOW;                // left forward on
+     56          }
+     57          
+     58          void spin_CCW(void){
+     59            LEFT_FORWARD_SPEED = WHEEL_OFF;           // left forward off
+     60            RIGHT_REVERSE_SPEED = WHEEL_OFF;          // right reverse off
+     61            LEFT_REVERSE_SPEED = FAST;                // left reverse on
+     62            RIGHT_FORWARD_SPEED = SLOW;               // right forward on
+     63          }
+     64          
+     65          void turn_CW(void){
+     66            LEFT_REVERSE_SPEED = WHEEL_OFF;
+     67            RIGHT_REVERSE_SPEED = WHEEL_OFF;
+     68            RIGHT_FORWARD_SPEED = SLOW;
+     69            LEFT_FORWARD_SPEED = FAST;
+     70          }
+     71          
+     72          //Monitoring loop 
+     73          void LineFollowing(void){
+     74            if(ready){
+                      ^
+Error[Pe020]: identifier "ready" is undefined
+     75              ready = FALSE;
+     76              
+     77              // Get state information
+     78              current_state = GetCurrentState();
+                     ^
+Error[Pe020]: identifier "current_state" is undefined
+
+      current_state = GetCurrentState();
+                      ^
+"C:\Users\platy\Desktop\ECE-306_Code\Project_07\wheels.c",78  Warning[Pe223]: 
+          function "GetCurrentState" declared implicitly
+     79              if(current_state == WHITE_STATE){
+                                         ^
+Error[Pe020]: identifier "WHITE_STATE" is undefined
+     80                switch(previous_state){
+                              ^
+Error[Pe020]: identifier "previous_state" is undefined
+     81                case LEFT_STATE: TurnRight();
+                            ^
+Error[Pe020]: identifier "LEFT_STATE" is undefined
+
+        case LEFT_STATE: TurnRight();
+                         ^
+"C:\Users\platy\Desktop\ECE-306_Code\Project_07\wheels.c",81  Warning[Pe223]: 
+          function "TurnRight" declared implicitly
+     82                break;
+     83                case RIGHT_STATE: turnLeft(); 
+                            ^
+Error[Pe020]: identifier "RIGHT_STATE" is undefined
+
+        case RIGHT_STATE: turnLeft(); 
+                          ^
+"C:\Users\platy\Desktop\ECE-306_Code\Project_07\wheels.c",83  Warning[Pe223]: 
+          function "turnLeft" declared implicitly
+     84                break;
+     85                default: SpinInPlace();
+                                ^
+Warning[Pe223]: function "SpinInPlace" declared implicitly
+     86                break;
+     87                }
+     88              }
+     89              else{
+     90                WheelControl(SimplePID); // not just reading white so able to set track point
+                       ^
+Warning[Pe223]: function "WheelControl" declared implicitly
+
+        WheelControl(SimplePID); // not just reading white so able to set track point
+                     ^
+"C:\Users\platy\Desktop\ECE-306_Code\Project_07\wheels.c",90  Error[Pe020]: 
+          identifier "SimplePID" is undefined
+     91                //set variables for next iteration
+     92                previous_state = current_state;
+                       ^
+Error[Pe020]: identifier "previous_state" is undefined
+     93                ready = false;
+                               ^
+Error[Pe020]: identifier "false" is undefined
+     94              }
+     95            }
+     96          }
+     97          
+     98          // Basic PID
+     99          int control SimplePID(void){
+                             ^
+Error[Pe065]: expected a ";"
+    100            //get sensor readings
+    101            Read_ADC();
+    102            
+    103            // calculate error
+    104            e = reference - (ADC_Left_Detect - ADC_Right_Detect); // magnitude of error indicates how far off the line
+    105            
+    106            // set PID error variables
+    107            current_error = e;
+    108            sum_error = sum_error + (current_error * sample_time);
+    109            delta_error = (current_error - previous_error)/sample_time;
+    110            previous_error = current_error;               // save error for next loop
+    111            
+    112            // calculate individual error components
+    113            P = current_error;
+    114            I = sum_error;
+    115            D = delta_error;
+    116            
+    117            // calculate PID control signal
+    118            
+    119            u = Kp*P + Ki*I + Kd*D;
+    120            return u;
+                           ^
+Warning[Pe012]: parsing restarts here after previous syntax error
+    121          }
+                 ^
+Error[Pe169]: expected a declaration
+    122          
+    123          // Basic control actuation
+    124          void Wheel_Control(control){
+    125            // Assume vehicle is designed to move at some  cruise speed and adjust wheel 
+    126            // PWM values to track a curved line
+    127            // Negative valued control indicates a right turn, positive indicates left
+    128            
+    129            lspeed = CRUISE_SPEED - control;
+    130            rspeed = CRUISE_SPEED + control;
+    131            
+    132            // saturate speed values within PWM range
+    133            if(lspeed < MIN_SPEED){
+    134              lspeed = MIN_SPEED;
+    135            }
+    136            if(rspeed < MIN_SPEED){
+    137              rspeed = MIN_SPEED;
+    138            }
+    139            else if (lspeed > MAX_SPEED){
+    140              lspeed = MAX_SPEED;
+    141            }
+    142            else if (rspeed > MAX_SPEED){
+    143              rspeed = MAX_SPEED;
+    144            }
+    145            
+    146            // set speed values to pwm registers
+    147            LEFT_FORWARD_SPEED = lspeed;
+                                              ^
+Warning[Pe012]: parsing restarts here after previous syntax error
+    148            RIGHT_FORWARD_SPEED = rspeed;
+                   ^
+Error[Pe077]: this declaration has no storage class or type specifier
+
+    RIGHT_FORWARD_SPEED = rspeed;
+    ^
+"C:\Users\platy\Desktop\ECE-306_Code\Project_07\wheels.c",148  Error[Pe101]: 
+          "TB3CCR1" has already been declared in the current scope (at line
+          5446 of "C:\Program Files (x86)\IAR Systems\Embedded Workbench
+          8.0\430\inc\msp430fr2355.h")
+
+    RIGHT_FORWARD_SPEED = rspeed;
+                          ^
+"C:\Users\platy\Desktop\ECE-306_Code\Project_07\wheels.c",148  Error[Pe028]: 
+          expression must have a constant value
+    149          }
+                 ^
+Error[Pe169]: expected a declaration
+
+Errors: 15
+Warnings: 7

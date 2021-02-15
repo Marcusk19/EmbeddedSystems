@@ -1,0 +1,566 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           24/Apr/2020  14:22:13
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_07b\ADC.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWDF74.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_07b\ADC.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\Debug\List\ADC.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\Debug\Obj\ADC.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_07b\ADC.c
+      1          //==============================================================================
+      2          // Filename : ADC.c
+      3          //
+      4          // Description: This file contains functions for analog to digital
+      5          // converter
+      6          //
+      7          // Author: Marcus Kok
+      8          // Date: February 2020
+      9          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+     10          //==============================================================================
+     11          
+     12          #include "macros.h"
+     13          #include "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x222
+   \   union <unnamed> _A_PBOUT_L
+   \                     _A_PBOUT_L:
+   \   000000                DS8 2
+     14          #include "functions.h"
+     15          #include <string.h>
+     16          
+     17          //--------------------------- globals ------------------------------------------
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     18          char adc_char[ADC_NUM_DIGITS];
+   \                     adc_char:
+   \   000000                DS8 5
+
+   \                                 In  segment DATA16_I, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     19          char display_Buffer[] = "      ";
+   \                     display_Buffer:
+   \   000000                DS8 7
+   \   000007                REQUIRE `?<Initializer for display_Buffer>`
+     20          extern volatile unsigned char display_changed;
+     21          extern char display_line[numLines][strSize];
+     22          extern volatile unsigned int CCR0_COUNT;
+     23            
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     24            unsigned int black_threshold;
+   \                     black_threshold:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     25            unsigned int white_threshold;
+   \                     white_threshold:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     26            unsigned int calibrate_state = CAL_BLACK;
+   \                     calibrate_state:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     27            unsigned int calibrated = FALSE;
+   \                     calibrated:
+   \   000000                DS8 2
+     28            
+     29            extern unsigned int Button_One;
+     30            extern unsigned int ADC_Left_Detect;
+     31            extern unsigned int ADC_Right_Detect;
+     32            extern unsigned int ADC_Thumb; 
+     33            extern unsigned int circle_clock;
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     34            char circle_timer[6];
+   \                     circle_timer:
+   \   000000                DS8 6
+     35          //------------------------------------------------------------------------------
+     36          
+
+   \                                 In  segment CODE, align 2
+     37          void display_ADC(void){
+   \                     display_ADC:
+     38            if(CCR0_COUNT == TB0CCR0_CYCLES){                     // 0.2 seconds passed
+   \   000000   A293....     CMP.W   #0x2, &CCR0_COUNT
+   \   000004   1D20         JNE     ??display_ADC_0
+     39                HEXtoBCD(ADC_Left_Detect);          // convert result to a string
+   \   000006   1C42....     MOV.W   &ADC_Left_Detect, R12
+   \   00000A   ........     CALLA   #HEXtoBCD
+     40                ClrDisplay_Buffer_3();
+   \   00000E   ........     CALLA   #ClrDisplay_Buffer_3
+     41                adc_line4(POSITION_ONE);            // place string in display
+   \   000012   0C43         MOV.W   #0x0, R12
+   \   000014   ........     CALLA   #adc_line4
+     42                
+     43                HEXtoBCD(ADC_Right_Detect);         // convert result to a string
+   \   000018   1C42....     MOV.W   &ADC_Right_Detect, R12
+   \   00001C   ........     CALLA   #HEXtoBCD
+     44                ClrDisplay_Buffer_2();
+   \   000020   ........     CALLA   #ClrDisplay_Buffer_2
+     45                adc_line3(POSITION_ONE);            // place string in display
+   \   000024   0C43         MOV.W   #0x0, R12
+   \   000026   ........     CALLA   #adc_line3
+     46                
+     47                HEXtoBCD(ADC_Thumb);                // convert result to a string
+   \   00002A   1C42....     MOV.W   &ADC_Thumb, R12
+   \   00002E   ........     CALLA   #HEXtoBCD
+     48                ClrDisplay_Buffer_1();
+   \   000032   ........     CALLA   #ClrDisplay_Buffer_1
+     49                adc_line2(POSITION_ONE);            // place string in display
+   \   000036   0C43         MOV.W   #0x0, R12
+   \   000038   ........     CALLA   #adc_line2
+     50                
+     51                CCR0_COUNT = RESET_STATE;
+   \   00003C   8243....     MOV.W   #0x0, &CCR0_COUNT
+     52            }
+     53          }
+   \                     ??display_ADC_0:
+   \   000040   1001         RETA
+     54          
+
+   \                                 In  segment CODE, align 2
+     55          void getCircleTime(int hex_value){
+   \                     getCircleTime:
+     56            int value;
+     57            circle_timer[BCD_THOUSAND] = '0';
+   \   000000   F2403000.... MOV.B   #0x30, &circle_timer
+     58            while(hex_value > THOUSANDS){
+   \                     ??getCircleTime_0:
+   \   000006   3C90E803     CMP.W   #0x3e8, R12
+   \   00000A   0C38         JL      ??getCircleTime_3
+     59              hex_value = hex_value - THOUSAND_DIV;
+   \   00000C   3C5018FC     ADD.W   #0xfc18, R12
+     60              value++;
+   \   000010   1F53         ADD.W   #0x1, R15
+     61              circle_timer[BCD_THOUSAND] = ASCII_CONV + value;
+   \   000012   0E12         PUSH.W  R14
+   \   000014   C14F0000     MOV.B   R15, 0(SP)
+   \   000018   3E41         POP.W   R14
+   \   00001A   7E503000     ADD.B   #0x30, R14
+   \   00001E   C24E....     MOV.B   R14, &circle_timer
+   \   000022   F13F         JMP     ??getCircleTime_0
+     62            }
+     63            value = RESET_STATE;
+   \                     ??getCircleTime_3:
+   \   000024   0F43         MOV.W   #0x0, R15
+     64            circle_timer[BCD_HUNDRED] = '0';
+   \   000026   F2403000.... MOV.B   #0x30, &circle_timer + 1
+     65            while(hex_value > HUNDREDS){
+   \                     ??getCircleTime_1:
+   \   00002C   3C906400     CMP.W   #0x64, R12
+   \   000030   0C38         JL      ??getCircleTime_4
+     66              hex_value = hex_value - HUNDRED_DIV;
+   \   000032   3C509CFF     ADD.W   #0xff9c, R12
+     67              value++;
+   \   000036   1F53         ADD.W   #0x1, R15
+     68              circle_timer[BCD_HUNDRED] = ASCII_CONV + value;
+   \   000038   0E12         PUSH.W  R14
+   \   00003A   C14F0000     MOV.B   R15, 0(SP)
+   \   00003E   3E41         POP.W   R14
+   \   000040   7E503000     ADD.B   #0x30, R14
+   \   000044   C24E....     MOV.B   R14, &circle_timer + 1
+   \   000048   F13F         JMP     ??getCircleTime_1
+     69            }
+     70            value = RESET_STATE;
+   \                     ??getCircleTime_4:
+   \   00004A   0F43         MOV.W   #0x0, R15
+     71            adc_char[BCD_TEN] = '0';
+   \   00004C   F2403000.... MOV.B   #0x30, &adc_char + 2
+     72            while(hex_value > TENS){
+   \                     ??getCircleTime_2:
+   \   000052   3C900A00     CMP.W   #0xa, R12
+   \   000056   0C38         JL      ??getCircleTime_5
+     73              hex_value = hex_value - TEN_DIV;
+   \   000058   3C50F6FF     ADD.W   #0xfff6, R12
+     74              value++;
+   \   00005C   1F53         ADD.W   #0x1, R15
+     75              circle_timer[BCD_TEN] = ASCII_CONV + value;
+   \   00005E   0E12         PUSH.W  R14
+   \   000060   C14F0000     MOV.B   R15, 0(SP)
+   \   000064   3E41         POP.W   R14
+   \   000066   7E503000     ADD.B   #0x30, R14
+   \   00006A   C24E....     MOV.B   R14, &circle_timer + 2
+   \   00006E   F13F         JMP     ??getCircleTime_2
+     76            }
+     77            circle_timer[BCD_ONE] = '.';
+   \                     ??getCircleTime_5:
+   \   000070   F2402E00.... MOV.B   #0x2e, &circle_timer + 3
+     78            circle_timer[BCD_TENTH] = '0';
+   \   000076   F2403000.... MOV.B   #0x30, &circle_timer + 4
+     79            circle_timer[BCD_TENTH] = ASCII_CONV + hex_value;
+   \   00007C   0E12         PUSH.W  R14
+   \   00007E   C14C0000     MOV.B   R12, 0(SP)
+   \   000082   3E41         POP.W   R14
+   \   000084   7E503000     ADD.B   #0x30, R14
+   \   000088   C24E....     MOV.B   R14, &circle_timer + 4
+     80            circle_timer[CIRCLE_NULL] = NULL;
+   \   00008C   C243....     MOV.B   #0x0, &circle_timer + 5
+     81          }
+   \   000090   1001         RETA
+     82          
+     83          // hex to BCD conversion
+
+   \                                 In  segment CODE, align 2
+     84          void HEXtoBCD(int hex_value){
+   \                     HEXtoBCD:
+     85            int value;
+     86            adc_char[BCD_THOUSAND] = '0';
+   \   000000   F2403000.... MOV.B   #0x30, &adc_char
+     87            while(hex_value > THOUSANDS){
+   \                     ??HEXtoBCD_0:
+   \   000006   3C90E803     CMP.W   #0x3e8, R12
+   \   00000A   0C38         JL      ??HEXtoBCD_3
+     88              hex_value = hex_value - THOUSAND_DIV;
+   \   00000C   3C5018FC     ADD.W   #0xfc18, R12
+     89              value++;
+   \   000010   1F53         ADD.W   #0x1, R15
+     90              adc_char[BCD_THOUSAND] = ASCII_CONV + value;
+   \   000012   0E12         PUSH.W  R14
+   \   000014   C14F0000     MOV.B   R15, 0(SP)
+   \   000018   3E41         POP.W   R14
+   \   00001A   7E503000     ADD.B   #0x30, R14
+   \   00001E   C24E....     MOV.B   R14, &adc_char
+   \   000022   F13F         JMP     ??HEXtoBCD_0
+     91            }
+     92            value = RESET_STATE;
+   \                     ??HEXtoBCD_3:
+   \   000024   0F43         MOV.W   #0x0, R15
+     93            adc_char[BCD_HUNDRED] = '0';
+   \   000026   F2403000.... MOV.B   #0x30, &adc_char + 1
+     94            while(hex_value > HUNDREDS){
+   \                     ??HEXtoBCD_1:
+   \   00002C   3C906400     CMP.W   #0x64, R12
+   \   000030   0C38         JL      ??HEXtoBCD_4
+     95              hex_value = hex_value - HUNDRED_DIV;
+   \   000032   3C509CFF     ADD.W   #0xff9c, R12
+     96              value++;
+   \   000036   1F53         ADD.W   #0x1, R15
+     97              adc_char[BCD_HUNDRED] = ASCII_CONV + value;
+   \   000038   0E12         PUSH.W  R14
+   \   00003A   C14F0000     MOV.B   R15, 0(SP)
+   \   00003E   3E41         POP.W   R14
+   \   000040   7E503000     ADD.B   #0x30, R14
+   \   000044   C24E....     MOV.B   R14, &adc_char + 1
+   \   000048   F13F         JMP     ??HEXtoBCD_1
+     98            }
+     99            value = RESET_STATE;
+   \                     ??HEXtoBCD_4:
+   \   00004A   0F43         MOV.W   #0x0, R15
+    100            adc_char[BCD_TEN] = '0';
+   \   00004C   F2403000.... MOV.B   #0x30, &adc_char + 2
+    101            while(hex_value > TENS){
+   \                     ??HEXtoBCD_2:
+   \   000052   3C900A00     CMP.W   #0xa, R12
+   \   000056   0C38         JL      ??HEXtoBCD_5
+    102              hex_value = hex_value - TEN_DIV;
+   \   000058   3C50F6FF     ADD.W   #0xfff6, R12
+    103              value++;
+   \   00005C   1F53         ADD.W   #0x1, R15
+    104              adc_char[BCD_TEN] = ASCII_CONV + value;
+   \   00005E   0E12         PUSH.W  R14
+   \   000060   C14F0000     MOV.B   R15, 0(SP)
+   \   000064   3E41         POP.W   R14
+   \   000066   7E503000     ADD.B   #0x30, R14
+   \   00006A   C24E....     MOV.B   R14, &adc_char + 2
+   \   00006E   F13F         JMP     ??HEXtoBCD_2
+    105            }
+    106            adc_char[BCD_ONE] = '0';
+   \                     ??HEXtoBCD_5:
+   \   000070   F2403000.... MOV.B   #0x30, &adc_char + 3
+    107            adc_char[BCD_ONE] = ASCII_CONV + hex_value;
+   \   000076   0E12         PUSH.W  R14
+   \   000078   C14C0000     MOV.B   R12, 0(SP)
+   \   00007C   3E41         POP.W   R14
+   \   00007E   7E503000     ADD.B   #0x30, R14
+   \   000082   C24E....     MOV.B   R14, &adc_char + 3
+    108            adc_char[NULL_TERMINATOR] = '\0';
+   \   000086   C243....     MOV.B   #0x0, &adc_char + 4
+    109          }
+   \   00008A   1001         RETA
+    110          
+
+   \                                 In  segment CODE, align 2
+    111          void calibrate_sensors(void){
+   \                     calibrate_sensors:
+    112            switch(calibrate_state){
+   \   000000   1F42....     MOV.W   &calibrate_state, R15
+   \   000004   0F83         SUB.W   #0x0, R15
+   \   000006   0324         JEQ     ??calibrate_sensors_3
+   \   000008   1F83         SUB.W   #0x1, R15
+   \   00000A   1224         JEQ     ??calibrate_sensors_4
+   \   00000C   1001         RETA
+    113            case CAL_BLACK:
+    114              if(Button_One){
+   \                     ??calibrate_sensors_3:
+   \   00000E   8293....     CMP.W   #0x0, &Button_One
+   \   000012   2324         JEQ     ??calibrate_sensors_2
+    115                int var1 = ADC_Right_Detect;
+   \   000014   1F42....     MOV.W   &ADC_Right_Detect, R15
+    116                int var2 = ADC_Left_Detect;
+   \   000018   1E42....     MOV.W   &ADC_Left_Detect, R14
+    117                var1 = var1 + var2;
+   \   00001C   0F5E         ADD.W   R14, R15
+    118                black_threshold = var1 >> DIVIDE_BY_TWO;
+   \   00001E   0D4F         MOV.W   R15, R13
+   \   000020   0D11         RRA.W   R13
+   \   000022   824D....     MOV.W   R13, &black_threshold
+    119                calibrate_state = CAL_WHITE;
+   \   000026   9243....     MOV.W   #0x1, &calibrate_state
+    120                Button_One = FALSE;
+   \   00002A   8243....     MOV.W   #0x0, &Button_One
+    121              }
+    122              break;
+   \   00002E   1001         RETA
+    123            case CAL_WHITE:
+    124              if(Button_One){
+   \                     ??calibrate_sensors_4:
+   \   000030   8293....     CMP.W   #0x0, &Button_One
+   \   000034   1224         JEQ     ??calibrate_sensors_2
+    125                int var1 = ADC_Right_Detect;
+   \   000036   1F42....     MOV.W   &ADC_Right_Detect, R15
+    126                int var2 = ADC_Left_Detect;
+   \   00003A   1E42....     MOV.W   &ADC_Left_Detect, R14
+    127                var1 = var1 + var2;
+   \   00003E   0F5E         ADD.W   R14, R15
+    128                white_threshold = var1 >> DIVIDE_BY_TWO;
+   \   000040   0D4F         MOV.W   R15, R13
+   \   000042   0D11         RRA.W   R13
+   \   000044   824D....     MOV.W   R13, &white_threshold
+    129                white_threshold += CALIBRATION_ERROR;     // offset to ensure accuracy
+   \   000048   B2500A00.... ADD.W   #0xa, &white_threshold
+    130                calibrate_state = CAL_BLACK;
+   \   00004E   8243....     MOV.W   #0x0, &calibrate_state
+    131                calibrated = TRUE;
+   \   000052   9243....     MOV.W   #0x1, &calibrated
+    132                Button_One = FALSE;
+   \   000056   8243....     MOV.W   #0x0, &Button_One
+    133              }
+    134              break;      
+    135            default:break;
+    136            }
+    137          }
+   \                     ??calibrate_sensors_2:
+   \   00005A   1001         RETA
+
+   \                                 In  segment CODE, align 2
+    138          void adc_line4(int position){                   // print adc value to 4th line
+   \                     adc_line4:
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0A4C         MOV.W   R12, R10
+    139              strcat(adc_char, display_Buffer);
+   \   000004   3D40....     MOV.W   #display_Buffer, R13
+   \   000008   3C40....     MOV.W   #adc_char, R12
+   \   00000C   ........     CALLA   #strcat
+    140              strcpy(display_line[line4], adc_char);      // update display
+   \   000010   0D4C         MOV.W   R12, R13
+   \   000012   3C40....     MOV.W   #display_line + 33, R12
+   \   000016   ........     CALLA   #strcpy
+    141              update_string(display_line[line4], line4);
+   \   00001A   3D400300     MOV.W   #0x3, R13
+   \   00001E   3C40....     MOV.W   #display_line + 33, R12
+   \   000022   ........     CALLA   #update_string
+    142              display_changed = TRUE;
+   \   000026   D243....     MOV.B   #0x1, &display_changed
+    143              
+    144              //clear_adc_char();                          // reset adc_char
+    145          }
+   \   00002A   3A41         POP.W   R10
+   \   00002C   1001         RETA
+    146          
+
+   \                                 In  segment CODE, align 2
+    147          void adc_line2(int position){                   // print adc value to 2nd line
+   \                     adc_line2:
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0A4C         MOV.W   R12, R10
+    148            strcat(adc_char, display_Buffer);
+   \   000004   3D40....     MOV.W   #display_Buffer, R13
+   \   000008   3C40....     MOV.W   #adc_char, R12
+   \   00000C   ........     CALLA   #strcat
+    149            strcpy(display_line[line2], adc_char);        // update display
+   \   000010   0D4C         MOV.W   R12, R13
+   \   000012   3C40....     MOV.W   #display_line + 11, R12
+   \   000016   ........     CALLA   #strcpy
+    150            update_string(display_line[line2], line2);
+   \   00001A   1D43         MOV.W   #0x1, R13
+   \   00001C   3C40....     MOV.W   #display_line + 11, R12
+   \   000020   ........     CALLA   #update_string
+    151            display_changed = TRUE;
+   \   000024   D243....     MOV.B   #0x1, &display_changed
+    152            
+    153            //clear_adc_char();                            // reset adc_char
+    154          }
+   \   000028   3A41         POP.W   R10
+   \   00002A   1001         RETA
+    155          
+
+   \                                 In  segment CODE, align 2
+    156          void adc_line3(int position){                   // print adc value to 3rd line
+   \                     adc_line3:
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0A4C         MOV.W   R12, R10
+    157            strcat(adc_char, display_Buffer);
+   \   000004   3D40....     MOV.W   #display_Buffer, R13
+   \   000008   3C40....     MOV.W   #adc_char, R12
+   \   00000C   ........     CALLA   #strcat
+    158            strcpy(display_line[line3], adc_char);        // update display
+   \   000010   0D4C         MOV.W   R12, R13
+   \   000012   3C40....     MOV.W   #display_line + 22, R12
+   \   000016   ........     CALLA   #strcpy
+    159            update_string(display_line[line3], line3);
+   \   00001A   2D43         MOV.W   #0x2, R13
+   \   00001C   3C40....     MOV.W   #display_line + 22, R12
+   \   000020   ........     CALLA   #update_string
+    160            display_changed = TRUE;
+   \   000024   D243....     MOV.B   #0x1, &display_changed
+    161          }
+   \   000028   3A41         POP.W   R10
+   \   00002A   1001         RETA
+    162          
+
+   \                                 In  segment CODE, align 2
+    163          void emitter_Off(void){
+   \                     emitter_Off:
+    164            P3OUT &= ~IR_LED;                             // turn emitter off
+   \   000000   F2C020002202 BIC.B   #0x20, &0x222
+    165          }
+   \   000006   1001         RETA
+   \   000008                REQUIRE _A_PBOUT_L
+    166          
+
+   \                                 In  segment CODE, align 2
+    167          void emitter_On(void){                          // turne emitter on
+   \                     emitter_On:
+    168            P3OUT |= IR_LED;
+   \   000000   F2D020002202 BIS.B   #0x20, &0x222
+    169          }
+   \   000006   1001         RETA
+   \   000008                REQUIRE _A_PBOUT_L
+    170          
+
+   \                                 In  segment CODE, align 2
+    171          void clear_adc_char(void){
+   \                     clear_adc_char:
+    172            for(int i = RESET_STATE; i < ADC_NUM_DIGITS; i++){
+   \   000000   0F43         MOV.W   #0x0, R15
+   \                     ??clear_adc_char_0:
+   \   000002   3F900500     CMP.W   #0x5, R15
+   \   000006   0534         JGE     ??clear_adc_char_1
+    173              adc_char[i] = '0';
+   \   000008   FF403000.... MOV.B   #0x30, adc_char(R15)
+    174            }
+   \   00000E   1F53         ADD.W   #0x1, R15
+   \   000010   F83F         JMP     ??clear_adc_char_0
+    175          }
+   \                     ??clear_adc_char_1:
+   \   000012   1001         RETA
+
+   \                                 In  segment DATA16_ID, align 1, align-sorted
+   \                     `?<Initializer for display_Buffer>`:
+   \   000000   202020202020 DC8 "      "
+   \            00          
+    176            
+    177            
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      6   HEXtoBCD
+      6   adc_line2
+        6   -> strcat
+        6   -> strcpy
+        6   -> update_string
+      6   adc_line3
+        6   -> strcat
+        6   -> strcpy
+        6   -> update_string
+      6   adc_line4
+        6   -> strcat
+        6   -> strcpy
+        6   -> update_string
+      4   calibrate_sensors
+      4   clear_adc_char
+      4   display_ADC
+        4   -> ClrDisplay_Buffer_1
+        4   -> ClrDisplay_Buffer_2
+        4   -> ClrDisplay_Buffer_3
+        4   -> HEXtoBCD
+        4   -> adc_line2
+        4   -> adc_line3
+        4   -> adc_line4
+      4   emitter_Off
+      4   emitter_On
+      6   getCircleTime
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       7  ?<Initializer for display_Buffer>
+     140  HEXtoBCD
+       2  _A_PBOUT_L
+       5  adc_char
+      44  adc_line2
+      44  adc_line3
+      46  adc_line4
+       2  black_threshold
+      92  calibrate_sensors
+       2  calibrate_state
+       2  calibrated
+       6  circle_timer
+      20  clear_adc_char
+      66  display_ADC
+       7  display_Buffer
+       8  emitter_Off
+       8  emitter_On
+     146  getCircleTime
+       2  white_threshold
+
+ 
+ 614 bytes in segment CODE
+   2 bytes in segment DATA16_AN
+   7 bytes in segment DATA16_I
+   7 bytes in segment DATA16_ID
+  19 bytes in segment DATA16_Z
+ 
+ 614 bytes of CODE  memory
+   7 bytes of CONST memory
+  26 bytes of DATA  memory (+ 2 bytes shared)
+
+Errors: none
+Warnings: none

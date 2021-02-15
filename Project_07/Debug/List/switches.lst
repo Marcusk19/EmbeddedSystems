@@ -1,0 +1,159 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           19/Apr/2020  14:18:48
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_07\switches.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWD9F9.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_07\switches.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07\Debug\List\switches.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07\Debug\Obj\switches.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_07\switches.c
+      1          //==============================================================================
+      2          // Filename : switches.c
+      3          // Description: This file contains the functions for switches display state
+      4          // 
+      5          // Author: Marcus Kok
+      6          // Date: January 2020
+      7          // Compiler: Made with IAR Embedded Workbench for MSP430 7.12.4
+      8          //==============================================================================
+      9          
+     10          #include  "functions.h"
+     11          #include  "msp430.h"
+     12          #include "macros.h"
+     13          #include <string.h>
+     14          
+     15          extern unsigned int buttonState;
+     16          extern char display_line[numLines][strSize];
+     17          extern unsigned int num_presses;
+     18          extern volatile unsigned char display_changed;
+     19          extern char display_line[numLines][strSize];
+     20          extern volatile unsigned char update_display;
+     21          extern unsigned int emitter_flag;
+     22          extern unsigned int black_line_flag;
+     23          
+     24          
+
+   \                                 In  segment CODE, align 2
+     25          void Switches_Process(void){
+   \                     Switches_Process:
+     26              if(emitter_flag){
+   \   000000   8293....     CMP.W   #0x0, &emitter_flag
+   \   000004   0E24         JEQ     ??Switches_Process_1
+     27                strcpy(display_line[line1], "  Emit.On ");
+   \   000006   3D40....     MOV.W   #`?<Constant "  Emit.On ">`, R13
+   \   00000A   3C40....     MOV.W   #display_line, R12
+   \   00000E   ........     CALLA   #strcpy
+     28                update_string(display_line[line1], line1);
+   \   000012   0D43         MOV.W   #0x0, R13
+   \   000014   ........     CALLA   #update_string
+     29                enable_display_update();
+   \   000018   ........     CALLA   #enable_display_update
+     30                display_changed = TRUE;                        
+   \   00001C   D243....     MOV.B   #0x1, &display_changed
+   \   000020   0D3C         JMP     ??Switches_Process_0
+     31              }
+     32              else{
+     33                strcpy(display_line[line1], "  Emit.Off");
+   \                     ??Switches_Process_1:
+   \   000022   3D40....     MOV.W   #`?<Constant "  Emit.Off">`, R13
+   \   000026   3C40....     MOV.W   #display_line, R12
+   \   00002A   ........     CALLA   #strcpy
+     34                update_string(display_line[line1], line1);
+   \   00002E   0D43         MOV.W   #0x0, R13
+   \   000030   ........     CALLA   #update_string
+     35                enable_display_update();
+   \   000034   ........     CALLA   #enable_display_update
+     36                display_changed = TRUE;
+   \   000038   D243....     MOV.B   #0x1, &display_changed
+     37              }
+     38              
+     39              if(black_line_flag){
+   \                     ??Switches_Process_0:
+   \   00003C   8293....     CMP.W   #0x0, &black_line_flag
+   \   000040   0D24         JEQ     ??Switches_Process_2
+     40                  strcpy(display_line[line1], " BLK LINE ");
+   \   000042   3D40....     MOV.W   #`?<Constant " BLK LINE ">`, R13
+   \   000046   3C40....     MOV.W   #display_line, R12
+   \   00004A   ........     CALLA   #strcpy
+     41                  update_string(display_line[line1], line1);
+   \   00004E   0D43         MOV.W   #0x0, R13
+   \   000050   ........     CALLA   #update_string
+     42                  enable_display_update();
+   \   000054   ........     CALLA   #enable_display_update
+     43                  display_changed = TRUE;
+   \   000058   D243....     MOV.B   #0x1, &display_changed
+     44              }
+     45          }
+   \                     ??Switches_Process_2:
+   \   00005C   1001         RETA
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Emit.On ">`:
+   \   000000   2020456D6974 DC8 "  Emit.On "
+   \            2E4F6E2000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Emit.Off">`:
+   \   000000   2020456D6974 DC8 "  Emit.Off"
+   \            2E4F666600  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " BLK LINE ">`:
+   \   000000   20424C4B204C DC8 " BLK LINE "
+   \            494E452000  
+     46          
+     47          
+     48          
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   Switches_Process
+        4   -> enable_display_update
+        4   -> strcpy
+        4   -> update_string
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      11  ?<Constant "  Emit.Off">
+      11  ?<Constant "  Emit.On ">
+      11  ?<Constant " BLK LINE ">
+      94  Switches_Process
+
+ 
+ 94 bytes in segment CODE
+ 33 bytes in segment DATA16_C
+ 
+ 94 bytes of CODE  memory
+ 33 bytes of CONST memory
+
+Errors: none
+Warnings: none

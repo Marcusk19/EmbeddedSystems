@@ -1,0 +1,163 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           14/Feb/2020  10:34:07
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_05\switches.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EW80CE.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Homework_05\switches.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_05\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_05\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_05\Debug\List\switches.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_05\Debug\Obj\switches.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Homework_05\switches.c
+      1          //==============================================================================
+      2          // Filename : switches.c
+      3          // Description: This file contains the functions for switches on the fram board
+      4          // 
+      5          // Author: Marcus Kok
+      6          // Date: January 2020
+      7          // Compiler: Made with IAR Embedded Workbench for MSP430 7.12.4
+      8          //==============================================================================
+      9          
+     10          #include  "functions.h"
+     11          #include  "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x200
+   \   union <unnamed> _A_PAIN_L
+   \                     _A_PAIN_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x220
+   \   union <unnamed> _A_PBIN_L
+   \                     _A_PBIN_L:
+   \   000000                DS8 2
+     12          #include "macros.h"
+     13          #include <string.h>
+     14          
+     15          extern unsigned int buttonState;
+     16          extern char display_line[numLines][strSize];
+     17          extern unsigned int num_presses;
+     18          
+     19          
+
+   \                                 In  segment CODE, align 2
+     20          void Switches_Process(void){
+   \                     Switches_Process:
+     21            
+     22            //Switch 1
+     23            if(!(P4IN & SW1)){
+   \   000000   E2B32102     BIT.B   #0x2, &0x221
+   \   000004   042C         JC      ??Switches_Process_0
+     24              buttonState = SET_SMCLK;
+   \   000006   9243....     MOV.W   #0x1, &buttonState
+     25              runSwitches();
+   \   00000A   ........     CALLA   #runSwitches
+     26            }
+     27            
+     28             if(!(P2IN & SW2)){
+   \                     ??Switches_Process_0:
+   \   00000E   F2B20102     BIT.B   #0x8, &0x201
+   \   000012   042C         JC      ??Switches_Process_1
+     29               buttonState = SET_GPIO;
+   \   000014   A243....     MOV.W   #0x2, &buttonState
+     30               runSwitches();
+   \   000018   ........     CALLA   #runSwitches
+     31             }
+     32            //Switch 2
+     33          }
+   \                     ??Switches_Process_1:
+   \   00001C   1001         RETA
+   \   00001E                REQUIRE _A_PBIN_L
+   \   00001E                REQUIRE _A_PAIN_L
+     34          
+
+   \                                 In  segment CODE, align 2
+     35          void runSwitches(void){
+   \                     runSwitches:
+     36            switch(buttonState){
+   \   000000   1F42....     MOV.W   &buttonState, R15
+   \   000004   0F83         SUB.W   #0x0, R15
+   \   000006   0B24         JEQ     ??runSwitches_0
+   \   000008   1F83         SUB.W   #0x1, R15
+   \   00000A   0324         JEQ     ??runSwitches_2
+   \   00000C   1F83         SUB.W   #0x1, R15
+   \   00000E   0424         JEQ     ??runSwitches_3
+   \   000010   1001         RETA
+     37            case HOLD: 
+     38              break;
+     39              
+     40            case SET_SMCLK:
+     41              Init_Port3(USE_SMCLK);
+   \                     ??runSwitches_2:
+   \   000012   1C43         MOV.W   #0x1, R12
+   \   000014   ........     BRA     #Init_Port3
+     42              break;
+     43            
+     44            case SET_GPIO:
+     45              Init_Port3(USE_GPIO);
+   \                     ??runSwitches_3:
+   \   000018   0C43         MOV.W   #0x0, R12
+   \   00001A   ........     CALLA   #Init_Port3
+     46              break;
+     47              
+     48            default:
+     49              break;
+     50            }
+     51          }
+   \                     ??runSwitches_0:
+   \   00001E   1001         RETA
+     52          
+     53          
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   Switches_Process
+        4   -> runSwitches
+      4   runSwitches
+        0   -> Init_Port3
+        4   -> Init_Port3
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      30  Switches_Process
+       2  _A_PAIN_L
+       2  _A_PBIN_L
+      32  runSwitches
+
+ 
+ 62 bytes in segment CODE
+  4 bytes in segment DATA16_AN
+ 
+ 62 bytes of CODE memory
+  0 bytes of DATA memory (+ 4 bytes shared)
+
+Errors: none
+Warnings: none

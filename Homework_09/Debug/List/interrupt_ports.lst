@@ -1,0 +1,362 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           03/Apr/2020  15:29:51
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\interrupt_ports.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWF9EF.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Homework_09\interrupt_ports.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\List\interrupt_ports.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\Obj\interrupt_ports.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Homework_09\interrupt_ports.c
+      1          //==============================================================================
+      2          // Filename : interrupt_ports.c
+      3          //
+      4          // Description: This file contains the interrupt service routines for ports
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: February 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          
+     11          
+     12          //------------------------- globals --------------------------------------------
+     13          #include "macros.h"
+     14          #include "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x21a
+   \   union <unnamed> _A_PAIE_L
+   \                     _A_PAIE_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x21c
+   \   union <unnamed> _A_PAIFG_L
+   \                     _A_PAIFG_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x23a
+   \   union <unnamed> _A_PBIE_L
+   \                     _A_PBIE_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x23c
+   \   union <unnamed> _A_PBIFG_L
+   \                     _A_PBIFG_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x384
+   \   union <unnamed> _A_TB0CCTL1_L
+   \                     _A_TB0CCTL1_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x506
+   \   union <unnamed> _A_UCA0BRW_L
+   \                     _A_UCA0BRW_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x508
+   \   union <unnamed> _A_UCA0MCTLW_L
+   \                     _A_UCA0MCTLW_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x50e
+   \   union <unnamed> _A_UCA0TXBUF_L
+   \                     _A_UCA0TXBUF_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x51a
+   \   union <unnamed> _A_UCA0IE_L
+   \                     _A_UCA0IE_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x586
+   \   union <unnamed> _A_UCA1BRW_L
+   \                     _A_UCA1BRW_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x588
+   \   union <unnamed> _A_UCA1MCTLW_L
+   \                     _A_UCA1MCTLW_L:
+   \   000000                DS8 2
+     15          #include "functions.h"
+     16          #include <string.h>
+     17          
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     18          unsigned int Button_One = FALSE;
+   \                     Button_One:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     19          unsigned int Button_Two = FALSE;
+   \                     Button_Two:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     20          unsigned int debounce_flag_SW1 = RESET_STATE;
+   \                     debounce_flag_SW1:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     21          unsigned int debounce_flag_SW2 = RESET_STATE;
+   \                     debounce_flag_SW2:
+   \   000000                DS8 2
+     22          extern volatile unsigned int debounce_count_SW1;
+     23          extern volatile unsigned int debounce_count_SW2;
+     24          extern volatile unsigned int wheel_state;
+
+   \                                 In  segment DATA16_I, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     25          unsigned int emitter_flag = TRUE;               // true if emitter on, false if off
+   \                     emitter_flag:
+   \   000000                DS8 2
+   \   000002                REQUIRE `?<Initializer for emitter_flag>`
+     26          extern unsigned int emitter_display_change;
+     27          extern unsigned int one_second_flag;
+     28          extern unsigned int wait_count;
+
+   \                                 In  segment DATA16_I, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     29          int display_state = TOGGLE_TWO;                 
+   \                     display_state:
+   \   000000                DS8 2
+   \   000002                REQUIRE `?<Initializer for display_state>`
+     30          
+     31          extern char test_command[NCSU_SIZE];
+     32          extern char transmit_char[MAX_STR_SIZE];
+     33          extern int UCA1_index;
+     34          extern int UCA0_index;
+     35          
+     36          extern volatile unsigned char display_changed;
+     37          extern char display_line[numLines][strSize];
+     38          //char* S1_display = "switch 1"; not used
+     39          //char* S2_display = "switch 2"; not used
+     40          
+     41          extern volatile unsigned int main_state;
+     42          extern volatile unsigned int next_state;
+     43          extern int serial_mode;
+     44          //------------------------------------------------------------------------------
+     45          
+     46          #pragma vector = PORT4_VECTOR
+
+   \                                 In  segment ISR_CODE, align 2
+     47          __interrupt void switchP4_interrupt(void){
+   \                     switchP4_interrupt:
+   \   000000   0F12         PUSH.W  R15
+     48            //Switch 1
+     49            if(P4IFG & SW1){
+   \   000002   E2B33D02     BIT.B   #0x2, &0x23d
+   \   000006   1C28         JNC     ??switchP4_interrupt_0
+     50              //strcpy(display_line[line2], " switch 1 ");
+     51              //update_string(display_line[line2], line2);
+     52              //enable_display_update();
+     53              //display_changed = TRUE;   
+     54              P4IFG &= ~SW1;                      // IFG SW1 cleared
+   \   000008   E2C33D02     BIC.B   #0x2, &0x23d
+     55              P4IE &= ~SW1;                       // disable switch interrupt  
+   \   00000C   E2C33B02     BIC.B   #0x2, &0x23b
+     56              debounce_flag_SW1 = TRUE;           // set flag
+   \   000010   9243....     MOV.W   #0x1, &debounce_flag_SW1
+     57              debounce_count_SW1 = RESET_STATE;   // clear debounce count
+   \   000014   8243....     MOV.W   #0x0, &debounce_count_SW1
+     58              TB0CCTL1 |= CCIE;                   // enable debounce interrupt
+   \   000018   B2D010008403 BIS.W   #0x10, &0x384
+     59              
+     60              Button_One = TRUE;
+   \   00001E   9243....     MOV.W   #0x1, &Button_One
+     61          
+     62              UCA0_index = BEGINNING;              // enable transmit interrupt
+   \   000022   8243....     MOV.W   #0x0, &UCA0_index
+     63              UCA0TXBUF = transmit_char[UCA0_index++];
+   \   000026   1F42....     MOV.W   &UCA0_index, R15
+   \   00002A   5F4F....     MOV.B   transmit_char(R15), R15
+   \   00002E   4F4F         MOV.B   R15, R15
+   \   000030   824F0E05     MOV.W   R15, &0x50e
+   \   000034   9253....     ADD.W   #0x1, &UCA0_index
+     64              UCA0IE |= UCTXIE; 
+   \   000038   A2D31A05     BIS.W   #0x2, &0x51a
+     65              
+     66              serial_mode = TRANSMITTING;
+   \   00003C   9243....     MOV.W   #0x1, &serial_mode
+     67            }
+     68          }
+   \                     ??switchP4_interrupt_0:
+   \   000040   3F41         POP.W   R15
+   \   000042   0013         RETI
+   \   000044                REQUIRE _A_PBIFG_L
+   \   000044                REQUIRE _A_PBIE_L
+   \   000044                REQUIRE _A_TB0CCTL1_L
+   \   000044                REQUIRE _A_UCA0TXBUF_L
+   \   000044                REQUIRE _A_UCA0IE_L
+     69          
+     70          #pragma vector = PORT2_VECTOR
+
+   \                                 In  segment ISR_CODE, align 2
+     71          __interrupt void switchP2_interrupt(void){
+   \                     switchP2_interrupt:
+     72            //Switch 2
+     73            if(P2IFG & SW2){
+   \   000000   F2B21D02     BIT.B   #0x8, &0x21d
+   \   000004   2928         JNC     ??switchP2_interrupt_0
+     74              P2IFG &= ~SW2;                      // IFG SW2 cleared
+   \   000006   F2C21D02     BIC.B   #0x8, &0x21d
+     75              P2IE &= ~SW2;                       // disable switch interrupt
+   \   00000A   F2C21B02     BIC.B   #0x8, &0x21b
+     76              debounce_flag_SW2 = TRUE;           //set flag
+   \   00000E   9243....     MOV.W   #0x1, &debounce_flag_SW2
+     77              debounce_count_SW2 = RESET_STATE;   // clear debounce count
+   \   000012   8243....     MOV.W   #0x0, &debounce_count_SW2
+     78              TB0CCTL1 |= CCIE;                   // enable debounce interrupt
+   \   000016   B2D010008403 BIS.W   #0x10, &0x384
+     79           
+     80              
+     81              Button_Two = TRUE;
+   \   00001C   9243....     MOV.W   #0x1, &Button_Two
+     82                  
+     83              if(display_state == TOGGLE_ONE){
+   \   000020   9293....     CMP.W   #0x1, &display_state
+   \   000024   0D20         JNE     ??switchP2_interrupt_1
+     84              display_state = TOGGLE_TWO;
+   \   000026   A243....     MOV.W   #0x2, &display_state
+     85              
+     86              UCA0BRW = UCA0BRW_115200;           // set baud rate to 460800
+   \   00002A   A2420605     MOV.W   #0x4, &0x506
+     87              UCA0MCTLW = UCA0MCTLW_115200;
+   \   00002E   B24041550805 MOV.W   #0x5541, &0x508
+     88              UCA1BRW = UCA0BRW_115200;           // set baud rate to 460800
+   \   000034   A2428605     MOV.W   #0x4, &0x586
+     89              UCA1MCTLW = UCA0MCTLW_115200;
+   \   000038   B24041558805 MOV.W   #0x5541, &0x588
+   \   00003E   0013         RETI
+     90              }else{
+     91                display_state = TOGGLE_ONE;
+   \                     ??switchP2_interrupt_1:
+   \   000040   9243....     MOV.W   #0x1, &display_state
+     92                
+     93                UCA0BRW = UCA0BRW_460800;           // set baud rate to 460800
+   \   000044   92430605     MOV.W   #0x1, &0x506
+     94                UCA0MCTLW = UCA0MCTLW_460800;
+   \   000048   B240114A0805 MOV.W   #0x4a11, &0x508
+     95                UCA1BRW = UCA0BRW_460800;           // set baud rate to 460800
+   \   00004E   92438605     MOV.W   #0x1, &0x586
+     96                UCA1MCTLW = UCA0MCTLW_460800;
+   \   000052   B240114A8805 MOV.W   #0x4a11, &0x588
+     97              }
+     98              // emitter toggle not used
+     99              /*
+    100              // toggle emitter on/off
+    101              if(emitter_flag){
+    102                emitter_Off();
+    103                emitter_flag = FALSE;                        
+    104              }
+    105              else{
+    106                emitter_On();
+    107                emitter_flag = TRUE;      
+    108              } */   
+    109            }
+    110          }
+   \                     ??switchP2_interrupt_0:
+   \   000058   0013         RETI
+   \   00005A                REQUIRE _A_PAIFG_L
+   \   00005A                REQUIRE _A_PAIE_L
+   \   00005A                REQUIRE _A_TB0CCTL1_L
+   \   00005A                REQUIRE _A_UCA0BRW_L
+   \   00005A                REQUIRE _A_UCA0MCTLW_L
+   \   00005A                REQUIRE _A_UCA1BRW_L
+   \   00005A                REQUIRE _A_UCA1MCTLW_L
+
+   \                                 In  segment INTVEC, offset 0x2c, root
+   \                     `??switchP4_interrupt::??INTVEC 44`:
+   \   00002C   ....         DC16    switchP4_interrupt
+
+   \                                 In  segment INTVEC, offset 0x30, root
+   \                     `??switchP2_interrupt::??INTVEC 48`:
+   \   000030   ....         DC16    switchP2_interrupt
+
+   \                                 In  segment DATA16_ID, align 2, align-sorted
+   \                     `?<Initializer for emitter_flag>`:
+   \   000000   0100         DC16 1
+
+   \                                 In  segment DATA16_ID, align 2, align-sorted
+   \                     `?<Initializer for display_state>`:
+   \   000000   0200         DC16 2
+    111          
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   switchP2_interrupt
+      6   switchP4_interrupt
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       2  ?<Initializer for display_state>
+       2  ?<Initializer for emitter_flag>
+       2  Button_One
+       2  Button_Two
+       2  _A_PAIE_L
+       2  _A_PAIFG_L
+       2  _A_PBIE_L
+       2  _A_PBIFG_L
+       2  _A_TB0CCTL1_L
+       2  _A_UCA0BRW_L
+       2  _A_UCA0IE_L
+       2  _A_UCA0MCTLW_L
+       2  _A_UCA0TXBUF_L
+       2  _A_UCA1BRW_L
+       2  _A_UCA1MCTLW_L
+       2  debounce_flag_SW1
+       2  debounce_flag_SW2
+       2  display_state
+       2  emitter_flag
+      90  switchP2_interrupt
+       2  switchP2_interrupt::??INTVEC 48
+      68  switchP4_interrupt
+       2  switchP4_interrupt::??INTVEC 44
+
+ 
+  22 bytes in segment DATA16_AN
+   4 bytes in segment DATA16_I
+   4 bytes in segment DATA16_ID
+   8 bytes in segment DATA16_Z
+   4 bytes in segment INTVEC
+ 158 bytes in segment ISR_CODE
+ 
+ 158 bytes of CODE  memory
+   4 bytes of CONST memory (+  4 bytes shared)
+  12 bytes of DATA  memory (+ 22 bytes shared)
+
+Errors: none
+Warnings: none

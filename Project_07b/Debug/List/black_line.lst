@@ -1,0 +1,417 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           24/Apr/2020  14:22:13
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\black_line.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWDF75.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_07b\black_line.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\Debug\List\black_line.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\Debug\Obj\black_line.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_07b\black_line.c
+      1          //==============================================================================
+      2          // Filename : black_line.c
+      3          //
+      4          // Description: This file contains the functions for following a black line
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: April 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          
+     11          #include  "functions.h"
+     12          #include  "msp430.h"
+     13          #include "macros.h"
+     14          #include <string.h>
+     15          
+     16          //GLOBALS=======================================================================
+     17          extern unsigned int myTime;
+     18          extern unsigned int prevButton;
+     19          extern unsigned int buttonPress;
+     20          extern int wheelCount;
+     21          extern volatile unsigned int main_state;
+     22          
+     23          extern volatile unsigned int wheel_state;
+     24          
+     25          extern unsigned int black_line_flag;
+     26          extern unsigned int one_second_flag;
+     27          
+     28          
+     29          extern unsigned int ADC_Left_Detect;
+     30          extern unsigned int ADC_Right_Detect;
+     31          
+     32          extern volatile unsigned int command_count;
+     33          extern int command_duration;
+     34          extern int serial_display;
+     35          
+     36          extern char display_line[numLines][strSize];
+     37          extern volatile unsigned char display_changed;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     38          unsigned int current_state;
+   \                     current_state:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     39          unsigned int previous_state;
+   \                     previous_state:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_I, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     40          unsigned int follow_ready = TRUE;
+   \                     follow_ready:
+   \   000000                DS8 2
+   \   000002                REQUIRE `?<Initializer for follow_ready>`
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     41          int reference = RESET_STATE;
+   \                     reference:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     42          unsigned int wait_count = BEGINNING;
+   \                     wait_count:
+   \   000000                DS8 2
+     43          extern volatile unsigned int CCR0_COUNT;
+     44          extern unsigned int clock_running;
+     45          extern unsigned int black_line_count;
+     46          extern unsigned int black_threshold;
+     47          extern unsigned int white_threshold;
+     48          //==============================================================================
+     49          
+     50          //Monitoring loop 
+
+   \                                 In  segment CODE, align 2
+     51          void LineFollowing(void){
+   \                     LineFollowing:
+     52              getCurrentState();
+   \   000000   ........     CALLA   #getCurrentState
+     53              switch(current_state){
+   \   000004   1F42....     MOV.W   &current_state, R15
+   \   000008   1F83         SUB.W   #0x1, R15
+   \   00000A   1124         JEQ     ??LineFollowing_1
+   \   00000C   2F82         SUB.W   #0x4, R15
+   \   00000E   0B24         JEQ     ??LineFollowing_2
+   \   000010   1F83         SUB.W   #0x1, R15
+   \   000012   0B24         JEQ     ??LineFollowing_3
+   \   000014   1F83         SUB.W   #0x1, R15
+   \   000016   0D24         JEQ     ??LineFollowing_4
+   \   000018   1F83         SUB.W   #0x1, R15
+   \   00001A   0324         JEQ     ??LineFollowing_5
+   \   00001C   1F83         SUB.W   #0x1, R15
+   \   00001E   0B24         JEQ     ??LineFollowing_6
+   \   000020   1001         RETA
+     54              case START_LINE:
+     55                spin_CCW();
+   \                     ??LineFollowing_5:
+   \   000022   ........     CALLA   #spin_CCW
+     56              case TURN_RIGHT:
+     57                turn_Right();
+   \                     ??LineFollowing_2:
+   \   000026   ........     BRA     #turn_Right
+     58                break;
+     59              case TURN_LEFT:
+     60                turn_Left();
+   \                     ??LineFollowing_3:
+   \   00002A   ........     BRA     #turn_Left
+     61                break;
+     62              case FORWARD:
+     63                inch_Forward();
+   \                     ??LineFollowing_1:
+   \   00002E   ........     BRA     #inch_Forward
+     64                break;
+     65              case SPIN:
+     66                spin_CW();
+   \                     ??LineFollowing_4:
+   \   000032   ........     BRA     #spin_CW
+     67                break;
+     68              case EXIT:
+     69                exit_loop();
+   \                     ??LineFollowing_6:
+   \   000036   ........     CALLA   #exit_loop
+     70                main_state = HOLD;
+   \   00003A   8243....     MOV.W   #0x0, &main_state
+     71                break;
+     72              default: break;
+     73            }
+     74          }
+   \   00003E   1001         RETA
+     75          
+
+   \                                 In  segment CODE, align 2
+     76          void searchForLine(void){
+   \                     searchForLine:
+     77            if(ADC_Left_Detect < white_threshold && ADC_Right_Detect < white_threshold){
+   \   000000   9292........ CMP.W   &white_threshold, &ADC_Left_Detect
+   \   000006   062C         JC      ??searchForLine_1
+   \   000008   9292........ CMP.W   &white_threshold, &ADC_Right_Detect
+   \   00000E   022C         JC      ??searchForLine_1
+     78              inch_Forward();
+   \   000010   ........     BRA     #inch_Forward
+     79            }
+     80            else if(ADC_Left_Detect >= black_threshold || ADC_Right_Detect >= black_threshold){
+   \                     ??searchForLine_1:
+   \   000014   9292........ CMP.W   &black_threshold, &ADC_Left_Detect
+   \   00001A   042C         JC      ??searchForLine_2
+   \   00001C   9292........ CMP.W   &black_threshold, &ADC_Right_Detect
+   \   000022   1F28         JNC     ??searchForLine_3
+     81              stop_Movement();
+   \                     ??searchForLine_2:
+   \   000024   ........     CALLA   #stop_Movement
+     82              wait_ntime(ONE_SEC);
+   \   000028   3C401400     MOV.W   #0x14, R12
+   \   00002C   ........     CALLA   #wait_ntime
+     83              while(ADC_Left_Detect <= white_threshold || ADC_Right_Detect <= white_threshold){
+   \                     ??searchForLine_0:
+   \   000030   9292........ CMP.W   &ADC_Left_Detect, &white_threshold
+   \   000036   042C         JC      ??searchForLine_4
+   \   000038   9292........ CMP.W   &ADC_Right_Detect, &white_threshold
+   \   00003E   0328         JNC     ??searchForLine_5
+     84                spin_CW();
+   \                     ??searchForLine_4:
+   \   000040   ........     CALLA   #spin_CW
+   \   000044   F53F         JMP     ??searchForLine_0
+     85              }
+     86              stop_Movement();
+   \                     ??searchForLine_5:
+   \   000046   ........     CALLA   #stop_Movement
+     87              wait_ntime(ONE_SEC);
+   \   00004A   3C401400     MOV.W   #0x14, R12
+   \   00004E   ........     CALLA   #wait_ntime
+     88              CCW_ntime(CORRECTION_TURN_TIME);
+   \   000052   3C400300     MOV.W   #0x3, R12
+   \   000056   ........     CALLA   #CCW_ntime
+     89              black_line_flag = TRUE;
+   \   00005A   9243....     MOV.W   #0x1, &black_line_flag
+     90              black_line_count = BEGINNING;
+   \   00005E   8243....     MOV.W   #0x0, &black_line_count
+     91            }
+     92          }
+   \                     ??searchForLine_3:
+   \   000062   1001         RETA
+     93          
+
+   \                                 In  segment CODE, align 2
+     94          void getCurrentState(void){
+   \                     getCurrentState:
+     95            previous_state = current_state;
+   \   000000   9242........ MOV.W   &current_state, &previous_state
+     96            if(ADC_Left_Detect <= white_threshold){        // need to turn right
+   \   000006   9292........ CMP.W   &ADC_Left_Detect, &white_threshold
+   \   00000C   0428         JNC     ??getCurrentState_1
+     97              current_state = TURN_RIGHT;
+   \   00000E   B2400500.... MOV.W   #0x5, &current_state
+   \   000014   173C         JMP     ??getCurrentState_0
+     98            }
+     99            else if(ADC_Right_Detect <= white_threshold){       // need to turn left 
+   \                     ??getCurrentState_1:
+   \   000016   9292........ CMP.W   &ADC_Right_Detect, &white_threshold
+   \   00001C   0428         JNC     ??getCurrentState_2
+    100              current_state = TURN_LEFT;
+   \   00001E   B2400600.... MOV.W   #0x6, &current_state
+   \   000024   0F3C         JMP     ??getCurrentState_0
+    101            }
+    102            else if(ADC_Right_Detect >= black_threshold &&
+    103                    ADC_Left_Detect >= black_threshold){
+   \                     ??getCurrentState_2:
+   \   000026   9292........ CMP.W   &black_threshold, &ADC_Right_Detect
+   \   00002C   0828         JNC     ??getCurrentState_3
+   \   00002E   9292........ CMP.W   &black_threshold, &ADC_Left_Detect
+   \   000034   0428         JNC     ??getCurrentState_3
+    104                      current_state = previous_state;                    // else do nothing                
+   \   000036   9242........ MOV.W   &previous_state, &current_state
+   \   00003C   033C         JMP     ??getCurrentState_0
+    105                    }else{
+    106                      current_state = SPIN;               // completely off the line, spin
+   \                     ??getCurrentState_3:
+   \   00003E   B2400700.... MOV.W   #0x7, &current_state
+    107                    }
+    108            if(black_line_count >= LOOP_TIME){
+   \                     ??getCurrentState_0:
+   \   000044   B290B900.... CMP.W   #0xb9, &black_line_count
+   \   00004A   0328         JNC     ??getCurrentState_4
+    109              current_state = EXIT;
+   \   00004C   B2400900.... MOV.W   #0x9, &current_state
+    110            }
+    111          }
+   \                     ??getCurrentState_4:
+   \   000052   1001         RETA
+    112          
+
+   \                                 In  segment CODE, align 2
+    113          void exit_loop(void){
+   \                     exit_loop:
+    114            stop_Movement();
+   \   000000   ........     CALLA   #stop_Movement
+    115            wait_ntime(ONE_SEC);
+   \   000004   3C401400     MOV.W   #0x14, R12
+   \   000008   ........     CALLA   #wait_ntime
+    116            CW_ntime(EXIT_TURN_TIME);
+   \   00000C   3C400600     MOV.W   #0x6, R12
+   \   000010   ........     CALLA   #CW_ntime
+    117            stop_Movement();
+   \   000014   ........     CALLA   #stop_Movement
+    118            forward_ntime(ONE_SEC); 
+   \   000018   3C401400     MOV.W   #0x14, R12
+   \   00001C   ........     CALLA   #forward_ntime
+    119            clock_running = FALSE;
+   \   000020   8243....     MOV.W   #0x0, &clock_running
+    120          }
+   \   000024   1001         RETA
+    121          
+
+   \                                 In  segment CODE, align 2
+    122          void wait_ntime(int cycletime){
+   \                     wait_ntime:
+    123            wait_count = BEGINNING;
+   \   000000   8243....     MOV.W   #0x0, &wait_count
+    124            while(wait_count < cycletime);
+   \                     ??wait_ntime_0:
+   \   000004   829C....     CMP.W   R12, &wait_count
+   \   000008   FD2B         JNC     ??wait_ntime_0
+    125          }
+   \   00000A   1001         RETA
+    126          
+
+   \                                 In  segment CODE, align 2
+    127          void CCW_ntime(int cycletime){
+   \                     CCW_ntime:
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0A4C         MOV.W   R12, R10
+    128            wait_count = BEGINNING;
+   \   000004   8243....     MOV.W   #0x0, &wait_count
+    129            while(wait_count < cycletime){
+   \                     ??CCW_ntime_0:
+   \   000008   829A....     CMP.W   R10, &wait_count
+   \   00000C   032C         JC      ??CCW_ntime_1
+    130              spin_CCW();
+   \   00000E   ........     CALLA   #spin_CCW
+   \   000012   FA3F         JMP     ??CCW_ntime_0
+    131            }
+    132            stop_Movement();
+   \                     ??CCW_ntime_1:
+   \   000014   ........     CALLA   #stop_Movement
+    133          }
+   \   000018   3A41         POP.W   R10
+   \   00001A   1001         RETA
+    134          
+
+   \                                 In  segment CODE, align 2
+    135          void CW_ntime(int cycletime){
+   \                     CW_ntime:
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0A4C         MOV.W   R12, R10
+    136            wait_count = BEGINNING;
+   \   000004   8243....     MOV.W   #0x0, &wait_count
+    137            while(wait_count < cycletime){
+   \                     ??CW_ntime_0:
+   \   000008   829A....     CMP.W   R10, &wait_count
+   \   00000C   032C         JC      ??CW_ntime_1
+    138              spin_CW();
+   \   00000E   ........     CALLA   #spin_CW
+   \   000012   FA3F         JMP     ??CW_ntime_0
+    139            }
+    140            stop_Movement();
+   \                     ??CW_ntime_1:
+   \   000014   ........     CALLA   #stop_Movement
+    141          }
+   \   000018   3A41         POP.W   R10
+   \   00001A   1001         RETA
+
+   \                                 In  segment DATA16_ID, align 2, align-sorted
+   \                     `?<Initializer for follow_ready>`:
+   \   000000   0100         DC16 1
+    142          
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      6   CCW_ntime
+        6   -> spin_CCW
+        6   -> stop_Movement
+      6   CW_ntime
+        6   -> spin_CW
+        6   -> stop_Movement
+      4   LineFollowing
+        4   -> exit_loop
+        4   -> getCurrentState
+        0   -> inch_Forward
+        4   -> spin_CCW
+        0   -> spin_CW
+        0   -> turn_Left
+        0   -> turn_Right
+      4   exit_loop
+        4   -> CW_ntime
+        4   -> forward_ntime
+        4   -> stop_Movement
+        4   -> wait_ntime
+      4   getCurrentState
+      4   searchForLine
+        4   -> CCW_ntime
+        0   -> inch_Forward
+        4   -> spin_CW
+        4   -> stop_Movement
+        4   -> wait_ntime
+      4   wait_ntime
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       2  ?<Initializer for follow_ready>
+      28  CCW_ntime
+      28  CW_ntime
+      64  LineFollowing
+       2  current_state
+      38  exit_loop
+       2  follow_ready
+      84  getCurrentState
+       2  previous_state
+       2  reference
+     100  searchForLine
+       2  wait_count
+      12  wait_ntime
+
+ 
+ 354 bytes in segment CODE
+   2 bytes in segment DATA16_I
+   2 bytes in segment DATA16_ID
+   8 bytes in segment DATA16_Z
+ 
+ 354 bytes of CODE  memory
+   2 bytes of CONST memory
+  10 bytes of DATA  memory
+
+Errors: none
+Warnings: none

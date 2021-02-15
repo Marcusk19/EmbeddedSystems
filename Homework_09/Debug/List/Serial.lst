@@ -1,0 +1,330 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           03/Apr/2020  15:29:51
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Serial.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWFA01.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Serial.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\List\Serial.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Debug\Obj\Serial.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Homework_09\Serial.c
+      1          //==============================================================================
+      2          // Filename : Serial.c
+      3          //
+      4          // Description: This file contains the functions for serial communication
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: February 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          
+     11          #include "macros.h"
+     12          #include "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x58e
+   \   union <unnamed> _A_UCA1TXBUF_L
+   \                     _A_UCA1TXBUF_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x59c
+   \   union <unnamed> _A_UCA1IFG_L
+   \                     _A_UCA1IFG_L:
+   \   000000                DS8 2
+     13          #include "functions.h"
+     14          #include <string.h>
+     15          
+     16          //------------------------- globals --------------------------------------------
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     17          int UCA1_index;
+   \                     UCA1_index:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     18          int UCA0_index = RESET_STATE;
+   \                     UCA0_index:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_I, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     19          char test_command[NCSU_SIZE] = "NCSU  #1";
+   \                     test_command:
+   \   000000                DS8 8
+   \   000008                REQUIRE `?<Initializer for test_command>`
+     20          extern unsigned int usb_rx_ring_rd;
+     21          extern volatile unsigned int usb_rx_ring_wr;
+     22          extern volatile char USB_Char_Rx[SMALL_RING_SIZE];
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     23          volatile char process_buf[LARGE_RING_SIZE];
+   \                     process_buf:
+   \   000000                DS8 32
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     24          char receive_char[MAX_STR_SIZE];
+   \                     receive_char:
+   \   000000                DS8 11
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     25          char transmit_char[MAX_STR_SIZE];
+   \                     transmit_char:
+   \   000000                DS8 11
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     26          int process_index = BEGINNING;
+   \                     process_index:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     27          int serial_mode = WAIT;
+   \                     serial_mode:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     28          unsigned int serial_state = HOLD;
+   \                     serial_state:
+   \   000000                DS8 2
+     29          extern volatile char one_time;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     30          volatile unsigned int next_state = RESET_STATE;
+   \                     next_state:
+   \   000000                DS8 2
+     31          
+     32          extern unsigned int one_second_flag;
+     33          extern unsigned int main_wait_count;
+     34          extern unsigned int wait_count;
+     35          
+     36          //------------------------------------------------------------------------------
+
+   \                                 In  segment CODE, align 2
+     37          void out_character(char character){
+   \                     out_character:
+   \                     ??out_character_0:
+     38            // The while loop will stall as long as the Flag is not set (port is busy)
+     39            while(!(UCA1IFG & UCTXIFG)){
+   \   000000   A2B39C05     BIT.W   #0x2, &0x59c
+   \   000004   042C         JC      ??out_character_1
+     40              UCA1TXBUF = character;
+   \   000006   4C4C         MOV.B   R12, R12
+   \   000008   824C8E05     MOV.W   R12, &0x58e
+   \   00000C   F93F         JMP     ??out_character_0
+     41            }
+     42          }
+   \                     ??out_character_1:
+   \   00000E   1001         RETA
+   \   000010                REQUIRE _A_UCA1TXBUF_L
+   \   000010                REQUIRE _A_UCA1IFG_L
+     43          
+
+   \                                 In  segment CODE, align 2
+     44          void Send_And_Receive(void){
+   \                     Send_And_Receive:
+     45            switch(serial_state){
+   \   000000   1F42....     MOV.W   &serial_state, R15
+   \   000004   0F83         SUB.W   #0x0, R15
+   \   000006   0724         JEQ     ??Send_And_Receive_4
+   \   000008   2F83         SUB.W   #0x2, R15
+   \   00000A   1524         JEQ     ??Send_And_Receive_5
+   \   00000C   1F83         SUB.W   #0x1, R15
+   \   00000E   4124         JEQ     ??Send_And_Receive_6
+   \   000010   1F83         SUB.W   #0x1, R15
+   \   000012   6A24         JEQ     ??Send_And_Receive_3
+   \   000014   1001         RETA
+     46              case HOLD:
+     47                if(one_second_flag){
+   \                     ??Send_And_Receive_4:
+   \   000016   8293....     CMP.W   #0x0, &one_second_flag
+   \   00001A   0424         JEQ     ??Send_And_Receive_7
+     48                  main_wait_count ++;
+   \   00001C   9253....     ADD.W   #0x1, &main_wait_count
+     49                  one_second_flag = FALSE;
+   \   000020   8243....     MOV.W   #0x0, &one_second_flag
+     50                }
+     51                if(wait_count == TWO_SECOND_PAUSE){
+   \                     ??Send_And_Receive_7:
+   \   000024   A293....     CMP.W   #0x2, &wait_count
+   \   000028   5F20         JNE     ??Send_And_Receive_3
+     52                  main_wait_count = RESET_STATE;
+   \   00002A   8243....     MOV.W   #0x0, &main_wait_count
+     53                  serial_state = next_state;
+   \   00002E   9242........ MOV.W   &next_state, &serial_state
+     54                }
+     55                break;
+   \   000034   1001         RETA
+     56                
+     57              case RECEIVE:
+     58              if(usb_rx_ring_rd != usb_rx_ring_wr){
+   \                     ??Send_And_Receive_5:
+   \   000036   9292........ CMP.W   &usb_rx_ring_wr, &usb_rx_ring_rd
+   \   00003C   5524         JEQ     ??Send_And_Receive_3
+     59                
+     60                  process_buf[usb_rx_ring_rd] = USB_Char_Rx[usb_rx_ring_rd];
+   \   00003E   1F42....     MOV.W   &usb_rx_ring_rd, R15
+   \   000042   1E42....     MOV.W   &usb_rx_ring_rd, R14
+   \   000046   DE4F........ MOV.B   USB_Char_Rx(R15), process_buf(R14)
+     61                  
+     62                  if(process_buf[usb_rx_ring_rd] == 0x0A || process_buf[usb_rx_ring_rd] == 0x0D){
+   \   00004C   1F42....     MOV.W   &usb_rx_ring_rd, R15
+   \   000050   FF900A00.... CMP.B   #0xa, process_buf(R15)
+   \   000056   0624         JEQ     ??Send_And_Receive_8
+   \   000058   1F42....     MOV.W   &usb_rx_ring_rd, R15
+   \   00005C   FF900D00.... CMP.B   #0xd, process_buf(R15)
+   \   000062   0E20         JNE     ??Send_And_Receive_9
+     63                    clear_receive_char();
+   \                     ??Send_And_Receive_8:
+   \   000064   ........     CALLA   #clear_receive_char
+     64                    clear_transmit_char();
+   \   000068   ........     CALLA   #clear_transmit_char
+     65                    usb_rx_ring_rd = BEGINNING;
+   \   00006C   8243....     MOV.W   #0x0, &usb_rx_ring_rd
+     66                    usb_rx_ring_wr = BEGINNING;
+   \   000070   8243....     MOV.W   #0x0, &usb_rx_ring_wr
+     67                    serial_state = PROCESS;
+   \   000074   B2400300.... MOV.W   #0x3, &serial_state
+     68                    one_time = TRUE;
+   \   00007A   D243....     MOV.B   #0x1, &one_time
+     69                    break;
+   \   00007E   1001         RETA
+     70                  }
+     71                  usb_rx_ring_rd++;
+   \                     ??Send_And_Receive_9:
+   \   000080   9253....     ADD.W   #0x1, &usb_rx_ring_rd
+     72                  if(usb_rx_ring_rd >= (sizeof(USB_Char_Rx))){
+   \   000084   B2901000.... CMP.W   #0x10, &usb_rx_ring_rd
+   \   00008A   2E28         JNC     ??Send_And_Receive_3
+     73                    usb_rx_ring_rd = BEGINNING;
+   \   00008C   8243....     MOV.W   #0x0, &usb_rx_ring_rd
+     74                  }
+     75              }
+     76              
+     77              break;
+   \   000090   1001         RETA
+     78              case PROCESS:
+     79                receive_char[process_index] = process_buf[process_index];
+   \                     ??Send_And_Receive_6:
+   \   000092   1F42....     MOV.W   &process_index, R15
+   \   000096   1E42....     MOV.W   &process_index, R14
+   \   00009A   DE4F........ MOV.B   process_buf(R15), receive_char(R14)
+     80                process_buf[process_index] = '\0';                // clear out process buffer
+   \   0000A0   1F42....     MOV.W   &process_index, R15
+   \   0000A4   CF43....     MOV.B   #0x0, process_buf(R15)
+     81                process_index++;
+   \   0000A8   9253....     ADD.W   #0x1, &process_index
+     82                if(process_buf[process_index] == 0x0A || process_buf[process_index] == 0x0D){
+   \   0000AC   1F42....     MOV.W   &process_index, R15
+   \   0000B0   FF900A00.... CMP.B   #0xa, process_buf(R15)
+   \   0000B6   0624         JEQ     ??Send_And_Receive_10
+   \   0000B8   1F42....     MOV.W   &process_index, R15
+   \   0000BC   FF900D00.... CMP.B   #0xd, process_buf(R15)
+   \   0000C2   1220         JNE     ??Send_And_Receive_3
+     83                  receive_char[process_index] = '\0';             // null last char
+   \                     ??Send_And_Receive_10:
+   \   0000C4   1F42....     MOV.W   &process_index, R15
+   \   0000C8   CF43....     MOV.B   #0x0, receive_char(R15)
+     84                  strcpy(transmit_char, receive_char);            // copy receive to transmit
+   \   0000CC   3D40....     MOV.W   #receive_char, R13
+   \   0000D0   3C40....     MOV.W   #transmit_char, R12
+   \   0000D4   ........     CALLA   #strcpy
+     85                  clear_line4();
+   \   0000D8   ........     CALLA   #clear_line4
+     86                  serial_state = HALT;
+   \   0000DC   A242....     MOV.W   #0x4, &serial_state
+     87                  serial_mode = RECEIVE;
+   \   0000E0   A243....     MOV.W   #0x2, &serial_mode
+     88                  process_index = BEGINNING;
+   \   0000E4   8243....     MOV.W   #0x0, &process_index
+     89                }
+     90              break;
+     91              case HALT:
+     92                
+     93                break;
+     94              default: break;
+     95            }
+     96          }
+   \                     ??Send_And_Receive_3:
+   \   0000E8   1001         RETA
+
+   \                                 In  segment DATA16_ID, align 1, align-sorted
+   \                     `?<Initializer for test_command>`:
+   \   000000   4E4353552020 DC8 4EH, 43H, 53H, 55H, 20H, 20H, 23H, 31H
+   \            2331        
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   Send_And_Receive
+        4   -> clear_line4
+        4   -> clear_receive_char
+        4   -> clear_transmit_char
+        4   -> strcpy
+      4   out_character
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       8  ?<Initializer for test_command>
+     234  Send_And_Receive
+       2  UCA0_index
+       2  UCA1_index
+       2  _A_UCA1IFG_L
+       2  _A_UCA1TXBUF_L
+       2  next_state
+      16  out_character
+      32  process_buf
+       2  process_index
+      11  receive_char
+       2  serial_mode
+       2  serial_state
+       8  test_command
+      11  transmit_char
+
+ 
+ 250 bytes in segment CODE
+   4 bytes in segment DATA16_AN
+   8 bytes in segment DATA16_I
+   8 bytes in segment DATA16_ID
+  66 bytes in segment DATA16_Z
+ 
+ 250 bytes of CODE  memory
+   8 bytes of CONST memory
+  74 bytes of DATA  memory (+ 4 bytes shared)
+
+Errors: none
+Warnings: none

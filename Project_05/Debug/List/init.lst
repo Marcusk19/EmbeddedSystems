@@ -1,0 +1,201 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           23/Feb/2020  14:58:13
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_05\init.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EW303.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_05\init.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\Debug\List\init.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\Debug\Obj\init.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_05\init.c
+      1          //==============================================================================
+      2          // Filename : init.c
+      3          // Description: This file contains the initializing function declarations
+      4          // 
+      5          // Author: Marcus Kok
+      6          // Date: January 2020
+      7          // Compiler: Made with IAR Embedded Workbench for MSP430 7.12.4
+      8          //==============================================================================
+      9          
+     10          #include "macros.h"
+     11          #include "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x454
+   \   union <unnamed> _A_TB3CCR1_L
+   \                     _A_TB3CCR1_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x456
+   \   union <unnamed> _A_TB3CCR2_L
+   \                     _A_TB3CCR2_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x458
+   \   union <unnamed> _A_TB3CCR3_L
+   \                     _A_TB3CCR3_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x45a
+   \   union <unnamed> _A_TB3CCR4_L
+   \                     _A_TB3CCR4_L:
+   \   000000                DS8 2
+     12          #include "functions.h"
+     13          
+     14          extern volatile unsigned char update_display;
+     15          extern volatile unsigned int update_display_count;
+     16          extern char display_line[numLines][strSize];
+     17          extern char *display[numLines];
+     18          
+
+   \                                 In  segment CODE, align 2
+     19          void enable_interrupts(void){
+   \                     enable_interrupts:
+     20            __bis_SR_register(GIE);     // enable interrupts
+   \   000000   0343         NOP
+   \   000002   32D2         BIS.W   #0x8, SR
+     21            asm volatile ("eint \n");
+   \   000004   32D2         eint 
+     22          }
+   \   000006   1001         RETA
+     23          
+
+   \                                 In  segment CODE, align 2
+     24          void Init_Timers(void){
+   \                     Init_Timers:
+     25            Init_Timer_B0();
+   \   000000   ........     CALLA   #Init_Timer_B0
+     26            Init_Timer_B3();
+   \   000004   ........     BRA     #Init_Timer_B3
+     27          }
+     28          
+     29          
+
+   \                                 In  segment CODE, align 2
+     30          void Init_Wheels(void){
+   \                     Init_Wheels:
+     31            RIGHT_FORWARD_SPEED = WHEEL_OFF;
+   \   000000   82435404     MOV.W   #0x0, &0x454
+     32            LEFT_FORWARD_SPEED = WHEEL_OFF;
+   \   000004   82435604     MOV.W   #0x0, &0x456
+     33            RIGHT_REVERSE_SPEED = WHEEL_OFF;
+   \   000008   82435804     MOV.W   #0x0, &0x458
+     34            LEFT_REVERSE_SPEED = WHEEL_OFF;
+   \   00000C   82435A04     MOV.W   #0x0, &0x45a
+     35          }
+   \   000010   1001         RETA
+   \   000012                REQUIRE _A_TB3CCR1_L
+   \   000012                REQUIRE _A_TB3CCR2_L
+   \   000012                REQUIRE _A_TB3CCR3_L
+   \   000012                REQUIRE _A_TB3CCR4_L
+
+   \                                 In  segment CODE, align 2
+     36          void Init_Conditions(void){
+   \                     Init_Conditions:
+     37          //------------------------------------------------------------------------------
+     38            int i;
+     39          
+     40            for(i=start;i<loopEnd;i++){
+   \   000000   0F43         MOV.W   #0x0, R15
+   \                     ??Init_Conditions_0:
+   \   000002   3F900B00     CMP.W   #0xb, R15
+   \   000006   0A34         JGE     ??Init_Conditions_1
+     41              display_line[line1][i] = RESET_STATE;
+   \   000008   CF43....     MOV.B   #0x0, display_line(R15)
+     42              display_line[line2][i] = RESET_STATE;
+   \   00000C   CF43....     MOV.B   #0x0, display_line + 11(R15)
+     43              display_line[line3][i] = RESET_STATE;
+   \   000010   CF43....     MOV.B   #0x0, display_line + 22(R15)
+     44              display_line[line4][i] = RESET_STATE;
+   \   000014   CF43....     MOV.B   #0x0, display_line + 33(R15)
+     45            }
+   \   000018   1F53         ADD.W   #0x1, R15
+   \   00001A   F33F         JMP     ??Init_Conditions_0
+     46            display_line[line1][charlength] = RESET_STATE;
+   \                     ??Init_Conditions_1:
+   \   00001C   C243....     MOV.B   #0x0, &display_line + 10
+     47            display_line[line2][charlength] = RESET_STATE;
+   \   000020   C243....     MOV.B   #0x0, &display_line + 21
+     48            display_line[line3][charlength] = RESET_STATE;
+   \   000024   C243....     MOV.B   #0x0, &display_line + 32
+     49            display_line[line4][charlength] = RESET_STATE;
+   \   000028   C243....     MOV.B   #0x0, &display_line + 43
+     50          
+     51            display[line1] = &display_line[line1][RESET_STATE];
+   \   00002C   B240........ MOV.W   #display_line, &display
+     52            display[line2] = &display_line[line2][RESET_STATE];
+   \   000032   B240........ MOV.W   #display_line + 11, &display + 2
+     53            display[line3] = &display_line[line3][RESET_STATE];
+   \   000038   B240........ MOV.W   #display_line + 22, &display + 4
+     54            display[line4] = &display_line[line4][RESET_STATE];
+   \   00003E   B240........ MOV.W   #display_line + 33, &display + 6
+     55            update_display = RESET_STATE;
+   \   000044   C243....     MOV.B   #0x0, &update_display
+     56            update_display_count = RESET_STATE;
+   \   000048   8243....     MOV.W   #0x0, &update_display_count
+     57          // Interrupts are disabled by default, enable them.
+     58            enable_interrupts();
+   \   00004C   ........     BRA     #enable_interrupts
+     59          //------------------------------------------------------------------------------
+     60          }
+     61          
+     62            
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   Init_Conditions
+        0   -> enable_interrupts
+      4   Init_Timers
+        4   -> Init_Timer_B0
+        0   -> Init_Timer_B3
+      4   Init_Wheels
+      4   enable_interrupts
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      80  Init_Conditions
+       8  Init_Timers
+      18  Init_Wheels
+       2  _A_TB3CCR1_L
+       2  _A_TB3CCR2_L
+       2  _A_TB3CCR3_L
+       2  _A_TB3CCR4_L
+       8  enable_interrupts
+
+ 
+ 114 bytes in segment CODE
+   8 bytes in segment DATA16_AN
+ 
+ 114 bytes of CODE memory
+   0 bytes of DATA memory (+ 8 bytes shared)
+
+Errors: none
+Warnings: none

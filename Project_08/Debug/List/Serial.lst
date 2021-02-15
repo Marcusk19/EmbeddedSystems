@@ -1,0 +1,106 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           29/Mar/2020  17:05:42
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_08\Serial.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWDEF3.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_08\Serial.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_08\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_08\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_08\Debug\List\Serial.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_08\Debug\Obj\Serial.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_08\Serial.c
+      1          //==============================================================================
+      2          // Filename : Serial.c
+      3          //
+      4          // Description: This file contains the functions for serial communication
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: February 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          
+     11          #include "macros.h"
+     12          #include "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x58e
+   \   union <unnamed> _A_UCA1TXBUF_L
+   \                     _A_UCA1TXBUF_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x59c
+   \   union <unnamed> _A_UCA1IFG_L
+   \                     _A_UCA1IFG_L:
+   \   000000                DS8 2
+     13          #include "functions.h"
+     14          #include <string.h>
+     15          
+     16          //------------------------- globals --------------------------------------------
+     17          
+     18          //------------------------------------------------------------------------------
+
+   \                                 In  segment CODE, align 2
+     19          void out_character(char character){
+   \                     out_character:
+   \                     ??out_character_0:
+     20            // The while loop will stall as long as the Flag is not set (port is busy)
+     21            while(!(UCA1IFG & UCTXIFG)){
+   \   000000   A2B39C05     BIT.W   #0x2, &0x59c
+   \   000004   042C         JC      ??out_character_1
+     22              UCA1TXBUF = character;
+   \   000006   4C4C         MOV.B   R12, R12
+   \   000008   824C8E05     MOV.W   R12, &0x58e
+   \   00000C   F93F         JMP     ??out_character_0
+     23            }
+     24          }
+   \                     ??out_character_1:
+   \   00000E   1001         RETA
+   \   000010                REQUIRE _A_UCA1TXBUF_L
+   \   000010                REQUIRE _A_UCA1IFG_L
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   out_character
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       2  _A_UCA1IFG_L
+       2  _A_UCA1TXBUF_L
+      16  out_character
+
+ 
+ 16 bytes in segment CODE
+  4 bytes in segment DATA16_AN
+ 
+ 16 bytes of CODE memory
+  0 bytes of DATA memory (+ 4 bytes shared)
+
+Errors: none
+Warnings: none

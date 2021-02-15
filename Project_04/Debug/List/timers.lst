@@ -1,0 +1,118 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           10/Feb/2020  19:23:12
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_04\timers.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EW84C1.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_04\timers.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_04\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_04\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_04\Debug\List\timers.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_04\Debug\Obj\timers.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_04\timers.c
+      1          //==============================================================================
+      2          // Filename : wheels.c
+      3          //
+      4          // Description: This file contains the functions for the wheels 
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: February 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          #include  "functions.h"
+     11          #include  "msp430.h"
+     12          #include "macros.h"
+     13          
+     14          //GLOBALS=======================================================================
+     15          extern volatile unsigned int Time_Sequence;
+     16          extern unsigned int prevTime_Sequence; 
+     17          extern unsigned int myTime;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     18          int shapeCount = RESET_STATE;
+   \                     shapeCount:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     19          int wheelCount = RESET_STATE;
+   \                     wheelCount:
+   \   000000                DS8 2
+     20          //==============================================================================
+     21          
+     22          // my own timer function
+
+   \                                 In  segment CODE, align 2
+     23          void clock_process(void){
+   \                     clock_process:
+     24            if(prevTime_Sequence != Time_Sequence){
+   \   000000   9292........ CMP.W   &Time_Sequence, &prevTime_Sequence
+   \   000006   0924         JEQ     ??clock_process_0
+     25              prevTime_Sequence = Time_Sequence; 
+   \   000008   9242........ MOV.W   &Time_Sequence, &prevTime_Sequence
+     26              myTime ++; 
+   \   00000E   9253....     ADD.W   #0x1, &myTime
+     27              shapeCount ++;
+   \   000012   9253....     ADD.W   #0x1, &shapeCount
+     28              wheelCount ++;
+   \   000016   9253....     ADD.W   #0x1, &wheelCount
+     29            }
+     30            if(myTime == CLOCK_CYCLE){
+   \                     ??clock_process_0:
+   \   00001A   B2903200.... CMP.W   #0x32, &myTime
+   \   000020   0220         JNE     ??clock_process_1
+     31              myTime = RESET_STATE;
+   \   000022   8243....     MOV.W   #0x0, &myTime
+     32            }
+     33          }
+   \                     ??clock_process_1:
+   \   000026   1001         RETA
+     34          
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   clock_process
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      40  clock_process
+       2  shapeCount
+       2  wheelCount
+
+ 
+ 40 bytes in segment CODE
+  4 bytes in segment DATA16_Z
+ 
+ 40 bytes of CODE memory
+  4 bytes of DATA memory
+
+Errors: none
+Warnings: none

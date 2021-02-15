@@ -1,0 +1,709 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           16/Apr/2020  11:08:59
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_09\IOT.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EW257.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_09\IOT.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_09\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_09\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_09\Debug\List\IOT.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_09\Debug\Obj\IOT.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_09\IOT.c
+      1          //==============================================================================
+      2          // Filename : IOT.c
+      3          //
+      4          // Description: This file contains functions for communication with IOT       
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: April 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          #include "macros.h"
+     11          #include "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x506
+   \   union <unnamed> _A_UCA0BRW_L
+   \                     _A_UCA0BRW_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x508
+   \   union <unnamed> _A_UCA0MCTLW_L
+   \                     _A_UCA0MCTLW_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x51a
+   \   union <unnamed> _A_UCA0IE_L
+   \                     _A_UCA0IE_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x59a
+   \   union <unnamed> _A_UCA1IE_L
+   \                     _A_UCA1IE_L:
+   \   000000                DS8 2
+     12          #include "functions.h"
+     13          #include <string.h>
+     14          // globals
+     15          extern int UCA0_index;
+     16          extern int UCA1_index;
+
+   \                                 In  segment DATA16_I, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     17          char slash[] = "//\r";
+   \                     slash:
+   \   000000                DS8 4
+   \   000004                REQUIRE `?<Initializer for slash>`
+
+   \                                 In  segment DATA16_I, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     18          char F[] = "/F\r";
+   \                     F:
+   \   000000                DS8 4
+   \   000004                REQUIRE `?<Initializer for F>`
+
+   \                                 In  segment DATA16_I, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     19          char here[] = "I'm here\r\n";
+   \                     here:
+   \   000000                DS8 11
+   \   00000B                REQUIRE `?<Initializer for here>`
+     20          extern char command_buf[MAX_STR_SIZE];
+     21          extern char transmit_char[LARGE_RING_SIZE];
+     22          extern volatile char command_ready;
+     23          extern unsigned int usb_rx_ring_rd;
+     24          extern volatile unsigned int usb_rx_ring_wr;
+     25          extern volatile char USB_Char_Rx[SMALL_RING_SIZE];
+     26          extern volatile char process_buf[LARGE_RING_SIZE];
+     27          extern char transmit_char[LARGE_RING_SIZE];
+
+   \                                 In  segment DATA16_I, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     28          unsigned int IOT_state = RECEIVE;
+   \                     IOT_state:
+   \   000000                DS8 2
+   \   000002                REQUIRE `?<Initializer for IOT_state>`
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     29          int process_index = BEGINNING;
+   \                     process_index:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     30          int transmit_index = BEGINNING;
+   \                     transmit_index:
+   \   000000                DS8 2
+     31          extern unsigned int command_output;
+     32          extern int UCA1_index;
+     33          extern volatile unsigned int wheel_state;
+
+   \                                 In  segment DATA16_I, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     34          char command_code[] = "/0816";
+   \                     command_code:
+   \   000000                DS8 6
+   \   000006                REQUIRE `?<Initializer for command_code>`
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     35          int command_duration;
+   \                     command_duration:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     36          int hundreds = RESET_STATE;
+   \                     hundreds:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     37          int tens = RESET_STATE;
+   \                     tens:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     38          int ones = RESET_STATE;
+   \                     ones:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     39          int run_wheels = FALSE;
+   \                     run_wheels:
+   \   000000                DS8 2
+     40          
+     41          extern int wifi_command;
+     42          extern int wifi_command_index;
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     43          char transmit_command[LARGE_RING_SIZE];
+   \                     transmit_command:
+   \   000000                DS8 32
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     44          char test_purpose[LARGE_RING_SIZE];
+   \                     test_purpose:
+   \   000000                DS8 32
+     45          extern int stop_USB_receive;
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     46          char wifi_transmit[LARGE_RING_SIZE];
+   \                     wifi_transmit:
+   \   000000                DS8 32
+     47          //------------------------------------------------------------------------------
+     48          
+
+   \                                 In  segment CODE, align 2
+     49          void wait_for_command(void){
+   \                     wait_for_command:
+     50            
+     51            switch(IOT_state){
+   \   000000   1F42....     MOV.W   &IOT_state, R15
+   \   000004   0F83         SUB.W   #0x0, R15
+   \   000006   4424         JEQ     ??wait_for_command_3
+   \   000008   1F83         SUB.W   #0x1, R15
+   \   00000A   4224         JEQ     ??wait_for_command_3
+   \   00000C   1F83         SUB.W   #0x1, R15
+   \   00000E   0324         JEQ     ??wait_for_command_4
+   \   000010   1F83         SUB.W   #0x1, R15
+   \   000012   1E24         JEQ     ??wait_for_command_5
+   \   000014   1001         RETA
+     52            case HOLD:
+     53              break;
+     54            case RECEIVE:
+     55              if(usb_rx_ring_rd != usb_rx_ring_wr){
+   \                     ??wait_for_command_4:
+   \   000016   9292........ CMP.W   &usb_rx_ring_wr, &usb_rx_ring_rd
+   \   00001C   3924         JEQ     ??wait_for_command_3
+     56                process_buf[process_index++] = USB_Char_Rx[usb_rx_ring_rd++];
+   \   00001E   1F42....     MOV.W   &usb_rx_ring_rd, R15
+   \   000022   5E4F....     MOV.B   USB_Char_Rx(R15), R14
+   \   000026   9253....     ADD.W   #0x1, &usb_rx_ring_rd
+   \   00002A   1F42....     MOV.W   &process_index, R15
+   \   00002E   CF4E....     MOV.B   R14, process_buf(R15)
+   \   000032   9253....     ADD.W   #0x1, &process_index
+     57                
+     58                if(usb_rx_ring_rd >= (sizeof(USB_Char_Rx))){
+   \   000036   B2901000.... CMP.W   #0x10, &usb_rx_ring_rd
+   \   00003C   0228         JNC     ??wait_for_command_6
+     59                  usb_rx_ring_rd = BEGINNING;               // circular buffer
+   \   00003E   8243....     MOV.W   #0x0, &usb_rx_ring_rd
+     60                }
+     61                if(process_index >= (sizeof(process_buf))){
+   \                     ??wait_for_command_6:
+   \   000042   B2902000.... CMP.W   #0x20, &process_index
+   \   000048   2328         JNC     ??wait_for_command_3
+     62                  process_index = BEGINNING;                        // circular buffer
+   \   00004A   8243....     MOV.W   #0x0, &process_index
+     63                }
+     64              }
+     65              break;
+   \   00004E   1001         RETA
+     66            case PROCESS:
+     67              process_index = BEGINNING;          // reset index for next command
+   \                     ??wait_for_command_5:
+   \   000050   8243....     MOV.W   #0x0, &process_index
+     68              clear_transmit_char();              // clear transmit char to process commadn
+   \   000054   ........     CALLA   #clear_transmit_char
+     69              copy_to_transmit();                 // process_buf -> transmit_char
+   \   000058   ........     CALLA   #copy_to_transmit
+     70              verify_command();
+   \   00005C   ........     CALLA   #verify_command
+     71              command_duration = RESET_STATE;     // reset command_duration before obtaining it
+   \   000060   8243....     MOV.W   #0x0, &command_duration
+     72              get_command_time();                 // obtain command time
+   \   000064   ........     CALLA   #get_command_time
+     73              process_command();                  // choose output based on command received
+   \   000068   ........     CALLA   #process_command
+     74              
+     75              strcat(transmit_char, "\n");
+   \   00006C   3D40....     MOV.W   #`?<Constant "\\n">`, R13
+   \   000070   3C40....     MOV.W   #transmit_char, R12
+   \   000074   ........     CALLA   #strcat
+     76              reset_process_buf();                // reset process buffer for next command
+   \   000078   ........     CALLA   #reset_process_buf
+     77              reset_USB_Char_Rx();
+   \   00007C   ........     CALLA   #reset_USB_Char_Rx
+     78              
+     79              
+     80              UCA1_index = BEGINNING;             // reset index to transmit char
+   \   000080   8243....     MOV.W   #0x0, &UCA1_index
+     81              command_output = TRUE;
+   \   000084   9243....     MOV.W   #0x1, &command_output
+     82              UCA1IE |= UCTXIE;
+   \   000088   A2D39A05     BIS.W   #0x2, &0x59a
+     83              IOT_state = RECEIVE;                // move state back
+   \   00008C   A243....     MOV.W   #0x2, &IOT_state
+     84              break;
+     85            case TRANSMIT:
+     86              break;
+     87          
+     88            default: break;
+     89            }
+     90          }
+   \                     ??wait_for_command_3:
+   \   000090   1001         RETA
+   \   000092                REQUIRE _A_UCA1IE_L
+     91          
+     92          
+
+   \                                 In  segment CODE, align 2
+     93          void process_command(void){
+   \                     process_command:
+     94            switch(process_buf[KEYWORD]){
+   \   000000   5E42....     MOV.B   &process_buf + 5, R14
+   \   000004   7E802F00     SUB.B   #0x2f, R14
+   \   000008   1F24         JEQ     ??process_command_1
+   \   00000A   7E801300     SUB.B   #0x13, R14
+   \   00000E   3F24         JEQ     ??process_command_2
+   \   000010   6E82         SUB.B   #0x4, R14
+   \   000012   2124         JEQ     ??process_command_3
+   \   000014   7E800600     SUB.B   #0x6, R14
+   \   000018   4124         JEQ     ??process_command_4
+   \   00001A   5E83         SUB.B   #0x1, R14
+   \   00001C   3524         JEQ     ??process_command_5
+   \   00001E   7E800500     SUB.B   #0x5, R14
+   \   000022   3824         JEQ     ??process_command_6
+   \   000024   5E83         SUB.B   #0x1, R14
+   \   000026   2324         JEQ     ??process_command_7
+   \   000028   7E800F00     SUB.B   #0xf, R14
+   \   00002C   3024         JEQ     ??process_command_2
+   \   00002E   6E82         SUB.B   #0x4, R14
+   \   000030   1224         JEQ     ??process_command_3
+   \   000032   7E800600     SUB.B   #0x6, R14
+   \   000036   3224         JEQ     ??process_command_4
+   \   000038   5E83         SUB.B   #0x1, R14
+   \   00003A   2624         JEQ     ??process_command_5
+   \   00003C   7E800500     SUB.B   #0x5, R14
+   \   000040   2924         JEQ     ??process_command_6
+   \   000042   5E83         SUB.B   #0x1, R14
+   \   000044   1424         JEQ     ??process_command_7
+   \   000046   2D3C         JMP     ??process_command_0
+     95            case '/':
+     96              strcat(transmit_char, "\nI'm here\n");
+   \                     ??process_command_1:
+   \   000048   3D40....     MOV.W   #`?<Constant "\\nI\\'m here\\n">`, R13
+   \   00004C   3C40....     MOV.W   #transmit_char, R12
+   \   000050   ........     CALLA   #strcat
+     97              break;
+   \   000054   263C         JMP     ??process_command_0
+     98            case 'F':
+     99            case 'f':
+    100              strcat(transmit_char, "\n115200\n");
+   \                     ??process_command_3:
+   \   000056   3D40....     MOV.W   #`?<Constant "\\n115200\\n">`, R13
+   \   00005A   3C40....     MOV.W   #transmit_char, R12
+   \   00005E   ........     CALLA   #strcat
+    101              UCA0BRW = BRW_115200;               // set speed high
+   \   000062   A2420605     MOV.W   #0x4, &0x506
+    102              UCA0MCTLW = MCTLW_115200;
+   \   000066   B24041550805 MOV.W   #0x5541, &0x508
+    103              break;
+   \   00006C   1A3C         JMP     ??process_command_0
+    104            case 'S':
+    105            case 's':
+    106              strcat(transmit_char, "\n9600\n");
+   \                     ??process_command_7:
+   \   00006E   3D40....     MOV.W   #`?<Constant "\\n9600\\n">`, R13
+   \   000072   3C40....     MOV.W   #transmit_char, R12
+   \   000076   ........     CALLA   #strcat
+    107              UCA0BRW = BRW_9600;               // set speed slow
+   \   00007A   B24034000605 MOV.W   #0x34, &0x506
+    108              UCA0MCTLW = MCTLW_9600;
+   \   000080   B24011490805 MOV.W   #0x4911, &0x508
+    109              break;
+   \   000086   0D3C         JMP     ??process_command_0
+    110            case 'M':
+    111            case 'm':
+    112              wheel_state = FORWARD;
+   \                     ??process_command_5:
+   \   000088   9243....     MOV.W   #0x1, &wheel_state
+    113              break;
+   \   00008C   0A3C         JMP     ??process_command_0
+    114            case 'B':
+    115            case 'b':
+    116              wheel_state = REVERSE;
+   \                     ??process_command_2:
+   \   00008E   A243....     MOV.W   #0x2, &wheel_state
+    117              break;
+   \   000092   073C         JMP     ??process_command_0
+    118            case 'R':
+    119            case 'r':
+    120              wheel_state = RIGHT_TURN;
+   \                     ??process_command_6:
+   \   000094   B2400500.... MOV.W   #0x5, &wheel_state
+    121              break;
+   \   00009A   033C         JMP     ??process_command_0
+    122            case 'L':
+    123            case 'l':
+    124              wheel_state = LEFT_TURN;
+   \                     ??process_command_4:
+   \   00009C   B2400600.... MOV.W   #0x6, &wheel_state
+    125              break;
+    126            default:  
+    127              break;
+    128            }
+    129          command_ready = FALSE;                  // reset flag
+   \                     ??process_command_0:
+   \   0000A2   C243....     MOV.B   #0x0, &command_ready
+    130          }
+   \   0000A6   1001         RETA
+   \   0000A8                REQUIRE _A_UCA0BRW_L
+   \   0000A8                REQUIRE _A_UCA0MCTLW_L
+    131          
+
+   \                                 In  segment CODE, align 2
+    132          void verify_command(void){
+   \                     verify_command:
+   \   000000   0A12         PUSH.W  R10
+    133            for(int i = 1; i < 5; i++){
+   \   000002   1A43         MOV.W   #0x1, R10
+   \                     ??verify_command_0:
+   \   000004   3A900500     CMP.W   #0x5, R10
+   \   000008   0E34         JGE     ??verify_command_1
+    134              if(process_buf[i] != command_code[i]){
+   \   00000A   DA9A........ CMP.B   command_code(R10), process_buf(R10)
+   \   000010   0824         JEQ     ??verify_command_2
+    135                strcpy(transmit_char, "Error");
+   \   000012   3D40....     MOV.W   #`?<Constant "Error">`, R13
+   \   000016   3C40....     MOV.W   #transmit_char, R12
+   \   00001A   ........     CALLA   #strcpy
+    136                IOT_state = RECEIVE;
+   \   00001E   A243....     MOV.W   #0x2, &IOT_state
+    137              }
+    138            }
+   \                     ??verify_command_2:
+   \   000022   1A53         ADD.W   #0x1, R10
+   \   000024   EF3F         JMP     ??verify_command_0
+    139          }
+   \                     ??verify_command_1:
+   \   000026   3A41         POP.W   R10
+   \   000028   1001         RETA
+    140          
+
+   \                                 In  segment CODE, align 2
+    141          void get_command_time(void){
+   \                     get_command_time:
+    142            hundreds = RESET_STATE;
+   \   000000   8243....     MOV.W   #0x0, &hundreds
+    143            hundreds = (process_buf[6] - 48) * 100;
+   \   000004   5F42....     MOV.B   &process_buf + 6, R15
+   \   000008   4F4F         MOV.B   R15, R15
+   \   00000A   3F50D0FF     ADD.W   #0xffd0, R15
+   \   00000E   5F06         RLAM.W  #0x2, R15
+   \   000010   0E4F         MOV.W   R15, R14
+   \   000012   5F0A         RLAM.W  #0x3, R15
+   \   000014   0E5F         ADD.W   R15, R14
+   \   000016   0F5F         RLA.W   R15
+   \   000018   0F5E         ADD.W   R14, R15
+   \   00001A   824F....     MOV.W   R15, &hundreds
+    144            tens = RESET_STATE; 
+   \   00001E   8243....     MOV.W   #0x0, &tens
+    145            tens = (process_buf[7] - 48) * 10;
+   \   000022   5F42....     MOV.B   &process_buf + 7, R15
+   \   000026   4F4F         MOV.B   R15, R15
+   \   000028   3F50D0FF     ADD.W   #0xffd0, R15
+   \   00002C   0F5F         RLA.W   R15
+   \   00002E   0E4F         MOV.W   R15, R14
+   \   000030   5F06         RLAM.W  #0x2, R15
+   \   000032   0F5E         ADD.W   R14, R15
+   \   000034   824F....     MOV.W   R15, &tens
+    146            ones = RESET_STATE;
+   \   000038   8243....     MOV.W   #0x0, &ones
+    147            ones = process_buf[8] - 48;
+   \   00003C   5F42....     MOV.B   &process_buf + 8, R15
+   \   000040   4F4F         MOV.B   R15, R15
+   \   000042   3F50D0FF     ADD.W   #0xffd0, R15
+   \   000046   824F....     MOV.W   R15, &ones
+    148            command_duration = hundreds + tens + ones;
+   \   00004A   1F42....     MOV.W   &hundreds, R15
+   \   00004E   1F52....     ADD.W   &tens, R15
+   \   000052   1F52....     ADD.W   &ones, R15
+   \   000056   824F....     MOV.W   R15, &command_duration
+    149          }
+   \   00005A   1001         RETA
+    150          
+
+   \                                 In  segment CODE, align 2
+    151          void send_command(char* command){
+   \                     send_command:
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0A4C         MOV.W   R12, R10
+    152            int m = strlen(command);
+   \   000004   0C4A         MOV.W   R10, R12
+   \   000006   ........     CALLA   #strlen
+    153              for(int i = BEGINNING; i < m; i++){
+   \   00000A   0F43         MOV.W   #0x0, R15
+   \                     ??send_command_0:
+   \   00000C   0F9C         CMP.W   R12, R15
+   \   00000E   0534         JGE     ??send_command_1
+    154                  wifi_transmit[i] = *command;
+   \   000010   EF4A....     MOV.B   @R10, wifi_transmit(R15)
+    155                  command++;
+   \   000014   1A53         ADD.W   #0x1, R10
+    156              }
+   \   000016   1F53         ADD.W   #0x1, R15
+   \   000018   F93F         JMP     ??send_command_0
+    157              wifi_command = TRUE;
+   \                     ??send_command_1:
+   \   00001A   9243....     MOV.W   #0x1, &wifi_command
+    158              UCA0_index = BEGINNING;
+   \   00001E   8243....     MOV.W   #0x0, &UCA0_index
+    159              UCA0IE |= UCTXIE;   
+   \   000022   A2D31A05     BIS.W   #0x2, &0x51a
+    160          }
+   \   000026   3A41         POP.W   R10
+   \   000028   1001         RETA
+   \   00002A                REQUIRE _A_UCA0IE_L
+    161          
+
+   \                                 In  segment CODE, align 2
+    162          void clear_transmit_char(void){
+   \                     clear_transmit_char:
+    163            for(int i = BEGINNING; i < sizeof(transmit_char); i++){
+   \   000000   0F43         MOV.W   #0x0, R15
+   \                     ??clear_transmit_char_0:
+   \   000002   3F902000     CMP.W   #0x20, R15
+   \   000006   042C         JC      ??clear_transmit_char_1
+    164              transmit_char[i] = NULL;
+   \   000008   CF43....     MOV.B   #0x0, transmit_char(R15)
+    165            }
+   \   00000C   1F53         ADD.W   #0x1, R15
+   \   00000E   F93F         JMP     ??clear_transmit_char_0
+    166          }
+   \                     ??clear_transmit_char_1:
+   \   000010   1001         RETA
+    167          
+
+   \                                 In  segment CODE, align 2
+    168          void reset_process_buf(void){
+   \                     reset_process_buf:
+    169            for(int i = BEGINNING; i < LARGE_RING_SIZE; i++){
+   \   000000   0F43         MOV.W   #0x0, R15
+   \                     ??reset_process_buf_0:
+   \   000002   3F902000     CMP.W   #0x20, R15
+   \   000006   0434         JGE     ??reset_process_buf_1
+    170              process_buf[i] = NULL;
+   \   000008   CF43....     MOV.B   #0x0, process_buf(R15)
+    171            }
+   \   00000C   1F53         ADD.W   #0x1, R15
+   \   00000E   F93F         JMP     ??reset_process_buf_0
+    172          }
+   \                     ??reset_process_buf_1:
+   \   000010   1001         RETA
+    173          
+
+   \                                 In  segment CODE, align 2
+    174          void copy_to_transmit(void){
+   \                     copy_to_transmit:
+    175            for(int i = BEGINNING; i < LARGE_RING_SIZE; i++){
+   \   000000   0F43         MOV.W   #0x0, R15
+   \                     ??copy_to_transmit_0:
+   \   000002   3F902000     CMP.W   #0x20, R15
+   \   000006   0534         JGE     ??copy_to_transmit_1
+    176              transmit_char[i] = process_buf[i];
+   \   000008   DF4F........ MOV.B   process_buf(R15), transmit_char(R15)
+    177            }
+   \   00000E   1F53         ADD.W   #0x1, R15
+   \   000010   F83F         JMP     ??copy_to_transmit_0
+    178          }
+   \                     ??copy_to_transmit_1:
+   \   000012   1001         RETA
+    179          
+
+   \                                 In  segment CODE, align 2
+    180          void reset_USB_Char_Rx(void){
+   \                     reset_USB_Char_Rx:
+    181            for(int i = BEGINNING; i < SMALL_RING_SIZE; i++){
+   \   000000   0F43         MOV.W   #0x0, R15
+   \                     ??reset_USB_Char_Rx_0:
+   \   000002   3F901000     CMP.W   #0x10, R15
+   \   000006   0434         JGE     ??reset_USB_Char_Rx_1
+    182              USB_Char_Rx[i] = NULL;
+   \   000008   CF43....     MOV.B   #0x0, USB_Char_Rx(R15)
+    183            }
+   \   00000C   1F53         ADD.W   #0x1, R15
+   \   00000E   F93F         JMP     ??reset_USB_Char_Rx_0
+    184            usb_rx_ring_rd = BEGINNING;
+   \                     ??reset_USB_Char_Rx_1:
+   \   000010   8243....     MOV.W   #0x0, &usb_rx_ring_rd
+    185            usb_rx_ring_wr = BEGINNING;
+   \   000014   8243....     MOV.W   #0x0, &usb_rx_ring_wr
+    186          }
+   \   000018   1001         RETA
+    187          
+
+   \                                 In  segment CODE, align 2
+    188          void clear_transmit_command(void){
+   \                     clear_transmit_command:
+    189            for(int i = BEGINNING; i < LARGE_RING_SIZE; i++){
+   \   000000   0F43         MOV.W   #0x0, R15
+   \                     ??clear_transmit_command_0:
+   \   000002   3F902000     CMP.W   #0x20, R15
+   \   000006   0434         JGE     ??clear_transmit_command_1
+    190              transmit_command[i] = NULL;
+   \   000008   CF43....     MOV.B   #0x0, transmit_command(R15)
+    191            }
+   \   00000C   1F53         ADD.W   #0x1, R15
+   \   00000E   F93F         JMP     ??clear_transmit_command_0
+    192          }
+   \                     ??clear_transmit_command_1:
+   \   000010   1001         RETA
+
+   \                                 In  segment DATA16_ID, align 1, align-sorted
+   \                     `?<Initializer for slash>`:
+   \   000000   2F2F0D00     DC8 "//\015"
+
+   \                                 In  segment DATA16_ID, align 1, align-sorted
+   \                     `?<Initializer for F>`:
+   \   000000   2F460D00     DC8 "/F\015"
+
+   \                                 In  segment DATA16_ID, align 1, align-sorted
+   \                     `?<Initializer for here>`:
+   \   000000   49276D206865 DC8 "I'm here\015\012"
+   \            72650D0A00  
+
+   \                                 In  segment DATA16_ID, align 2, align-sorted
+   \                     `?<Initializer for IOT_state>`:
+   \   000000   0200         DC16 2
+
+   \                                 In  segment DATA16_ID, align 1, align-sorted
+   \                     `?<Initializer for command_code>`:
+   \   000000   2F3038313600 DC8 "/0816"
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "\\n">`:
+   \   000000   0A00         DC8 "\012"
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "\\nI\\'m here\\n">`:
+   \   000000   0A49276D2068 DC8 "\012I'm here\012"
+   \            6572650A00  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "\\n115200\\n">`:
+   \   000000   0A3131353230 DC8 "\012115200\012"
+   \            300A00      
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "\\n9600\\n">`:
+   \   000000   0A393630300A DC8 "\0129600\012"
+   \            00          
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "Error">`:
+   \   000000   4572726F7200 DC8 "Error"
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   clear_transmit_char
+      4   clear_transmit_command
+      4   copy_to_transmit
+      4   get_command_time
+      4   process_command
+        4   -> strcat
+      4   reset_USB_Char_Rx
+      4   reset_process_buf
+      6   send_command
+        6   -> strlen
+      6   verify_command
+        6   -> strcpy
+      4   wait_for_command
+        4   -> clear_transmit_char
+        4   -> copy_to_transmit
+        4   -> get_command_time
+        4   -> process_command
+        4   -> reset_USB_Char_Rx
+        4   -> reset_process_buf
+        4   -> strcat
+        4   -> verify_command
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       6  ?<Constant "Error">
+       2  ?<Constant "\n">
+       9  ?<Constant "\n115200\n">
+       7  ?<Constant "\n9600\n">
+      11  ?<Constant "\nI\'m here\n">
+       4  ?<Initializer for F>
+       2  ?<Initializer for IOT_state>
+       6  ?<Initializer for command_code>
+      11  ?<Initializer for here>
+       4  ?<Initializer for slash>
+       4  F
+       2  IOT_state
+       2  _A_UCA0BRW_L
+       2  _A_UCA0IE_L
+       2  _A_UCA0MCTLW_L
+       2  _A_UCA1IE_L
+      18  clear_transmit_char
+      18  clear_transmit_command
+       6  command_code
+       2  command_duration
+      20  copy_to_transmit
+      92  get_command_time
+      11  here
+       2  hundreds
+       2  ones
+     168  process_command
+       2  process_index
+      26  reset_USB_Char_Rx
+      18  reset_process_buf
+       2  run_wheels
+      42  send_command
+       4  slash
+       2  tens
+      32  test_purpose
+      32  transmit_command
+       2  transmit_index
+      42  verify_command
+     146  wait_for_command
+      32  wifi_transmit
+
+ 
+ 590 bytes in segment CODE
+   8 bytes in segment DATA16_AN
+  35 bytes in segment DATA16_C
+  27 bytes in segment DATA16_I
+  27 bytes in segment DATA16_ID
+ 110 bytes in segment DATA16_Z
+ 
+ 590 bytes of CODE  memory
+  62 bytes of CONST memory
+ 137 bytes of DATA  memory (+ 8 bytes shared)
+
+Errors: none
+Warnings: none

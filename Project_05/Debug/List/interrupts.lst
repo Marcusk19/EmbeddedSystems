@@ -1,0 +1,126 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           20/Feb/2020  14:08:43
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_06\interrupts.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EW9D6E.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Homework_06\interrupts.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_06\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_06\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_06\Debug\List\interrupts.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_06\Debug\Obj\interrupts.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Homework_06\interrupts.c
+      1          //==============================================================================
+      2          // Filename : interrupts.c
+      3          //
+      4          // Description: This file contains the interrupt service routines
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: February 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          
+     11          #include "macros.h"
+     12          #include "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x242
+   \   union <unnamed> _A_PCOUT_L
+   \                     _A_PCOUT_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x392
+   \   union <unnamed> _A_TB0CCR0_L
+   \                     _A_TB0CCR0_L:
+   \   000000                DS8 2
+     13          #include "functions.h"
+     14          
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     15          int CCR0_COUNT = RESET_STATE;
+   \                     CCR0_COUNT:
+   \   000000                DS8 2
+     16          
+     17          #pragma vector = TIMER0_B0_VECTOR
+
+   \                                 In  segment ISR_CODE, align 2
+     18          __interrupt void Timer0_B0_ISR(void){
+   \                     Timer0_B0_ISR:
+     19            // timer interrupt B0 handler
+     20            TB0CCR0 += TB0CCR0_INTERVAL;
+   \   000000   B250C4099203 ADD.W   #0x9c4, &0x392
+     21            CCR0_COUNT ++;
+   \   000006   9253....     ADD.W   #0x1, &CCR0_COUNT
+     22            if(CCR0_COUNT > TB0CCR0_CYCLES){
+   \   00000A   B2900B00.... CMP.W   #0xb, &CCR0_COUNT
+   \   000010   0438         JL      ??Timer0_B0_ISR_0
+     23              P6OUT &= ~LCD_BACKLITE;
+   \   000012   F2C010004302 BIC.B   #0x10, &0x243
+   \   000018   0013         RETI
+     24            }
+     25            else{
+     26              P6OUT |= LCD_BACKLITE;
+   \                     ??Timer0_B0_ISR_0:
+   \   00001A   F2D010004302 BIS.B   #0x10, &0x243
+     27            }
+     28          }
+   \   000020   0013         RETI
+   \   000022                REQUIRE _A_TB0CCR0_L
+   \   000022                REQUIRE _A_PCOUT_L
+
+   \                                 In  segment INTVEC, offset 0x56, root
+   \                     `??Timer0_B0_ISR::??INTVEC 86`:
+   \   000056   ....         DC16    Timer0_B0_ISR
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   Timer0_B0_ISR
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       2  CCR0_COUNT
+      34  Timer0_B0_ISR
+       2  Timer0_B0_ISR::??INTVEC 86
+       2  _A_PCOUT_L
+       2  _A_TB0CCR0_L
+
+ 
+  4 bytes in segment DATA16_AN
+  2 bytes in segment DATA16_Z
+  2 bytes in segment INTVEC
+ 34 bytes in segment ISR_CODE
+ 
+ 34 bytes of CODE  memory
+  0 bytes of CONST memory (+ 2 bytes shared)
+  2 bytes of DATA  memory (+ 4 bytes shared)
+
+Errors: none
+Warnings: none

@@ -1,0 +1,513 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           10/Feb/2020  19:23:12
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_04\shapes.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EW8413.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_04\shapes.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_04\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_04\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_04\Debug\List\shapes.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_04\Debug\Obj\shapes.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_04\shapes.c
+      1          //==============================================================================
+      2          // Filename: shapes.c
+      3          // Description: contains functions for the car to draw shapes
+      4          // 
+      5          // Author: Marcus Kok
+      6          // Date: Feb 2020
+      7          // Compiler: Built with IAR Embedded Workbench 7.12.4
+      8          //==============================================================================
+      9          
+     10          #include "msp430.h"
+     11          #include "macros.h"
+     12          #include "functions.h"
+     13          #include <string.h>
+     14          
+     15          extern unsigned int buttonPress;
+     16          extern unsigned int myTime;
+     17          extern char display_line[numLines][strSize];
+     18          extern unsigned char display_changed;
+     19          extern unsigned int num_presses;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     20          unsigned int prevButton;
+   \                     prevButton:
+   \   000000                DS8 2
+     21          extern int shapeCount;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     22          int triangleCount = RESET_STATE;
+   \                     triangleCount:
+   \   000000                DS8 2
+     23          
+     24          
+
+   \                                 In  segment CODE, align 2
+     25          void runShapes(void){
+   \                     runShapes:
+     26            switch(buttonPress){
+   \   000000   1F42....     MOV.W   &buttonPress, R15
+   \   000004   1F83         SUB.W   #0x1, R15
+   \   000006   0D24         JEQ     ??runShapes_1
+   \   000008   1F83         SUB.W   #0x1, R15
+   \   00000A   1224         JEQ     ??runShapes_2
+   \   00000C   1F83         SUB.W   #0x1, R15
+   \   00000E   0B24         JEQ     ??runShapes_3
+   \   000010   2F83         SUB.W   #0x2, R15
+   \   000012   1824         JEQ     ??runShapes_4
+   \   000014   1F83         SUB.W   #0x1, R15
+   \   000016   1024         JEQ     ??runShapes_5
+   \   000018   1F83         SUB.W   #0x1, R15
+   \   00001A   1024         JEQ     ??runShapes_6
+   \   00001C   1F83         SUB.W   #0x1, R15
+   \   00001E   1024         JEQ     ??runShapes_7
+   \   000020   1001         RETA
+     27              
+     28            case CIRCLE: 
+     29              drawCCW_Circle();
+   \                     ??runShapes_1:
+   \   000022   ........     BRA     #drawCCW_Circle
+     30              break;
+     31              
+     32              
+     33            case TRIANGLE:
+     34              prevButton = TRIANGLE;
+   \                     ??runShapes_3:
+   \   000026   B2400300.... MOV.W   #0x3, &prevButton
+     35              drawTriangle();
+   \   00002C   ........     BRA     #drawTriangle
+     36              break;
+     37              
+     38            case FIGURE_EIGHT:
+     39              prevButton = FIGURE_EIGHT;
+   \                     ??runShapes_2:
+   \   000030   A243....     MOV.W   #0x2, &prevButton
+     40              drawFigureEight();   
+   \   000034   ........     BRA     #drawFigureEight
+     41              break;  
+     42              
+     43            case FIG_EIGHT_TWO:
+     44               drawFigureEightTwo();
+   \                     ??runShapes_5:
+   \   000038   ........     BRA     #drawFigureEightTwo
+     45               break;
+     46               
+     47            case FIGURE_EIGHT_THREE:
+     48              drawFigureEightThree();
+   \                     ??runShapes_6:
+   \   00003C   ........     BRA     #drawFigureEightThree
+     49              break;
+     50            
+     51            case FIGURE_EIGHT_FINISH:
+     52              drawFigureEightFinish();
+   \                     ??runShapes_7:
+   \   000040   ........     BRA     #drawFigureEightFinish
+     53              break;
+     54           
+     55              
+     56            case HOLD:
+     57              shapeCount = RESET_STATE;
+   \                     ??runShapes_4:
+   \   000044   8243....     MOV.W   #0x0, &shapeCount
+     58              resetMotors();
+   \   000048   ........     BRA     #resetMotors
+     59              break;
+     60              
+     61             default:
+     62              break;
+     63            }
+     64          }
+     65          
+
+   \                                 In  segment CODE, align 2
+     66          void displayShapes(void){
+   \                     displayShapes:
+     67            switch(buttonPress){
+   \   000000   1F42....     MOV.W   &buttonPress, R15
+   \   000004   1F83         SUB.W   #0x1, R15
+   \   000006   0924         JEQ     ??displayShapes_1
+   \   000008   1F83         SUB.W   #0x1, R15
+   \   00000A   2124         JEQ     ??displayShapes_2
+   \   00000C   1F83         SUB.W   #0x1, R15
+   \   00000E   1224         JEQ     ??displayShapes_3
+   \   000010   2F83         SUB.W   #0x2, R15
+   \   000012   3724         JEQ     ??displayShapes_4
+   \   000014   1F83         SUB.W   #0x1, R15
+   \   000016   2824         JEQ     ??displayShapes_5
+   \   000018   1001         RETA
+     68              
+     69            case CIRCLE:
+     70              strcpy(display_line[line2], "  circle ");
+   \                     ??displayShapes_1:
+   \   00001A   3D40....     MOV.W   #`?<Constant "  circle ">`, R13
+   \   00001E   3C40....     MOV.W   #display_line + 11, R12
+   \   000022   ........     CALLA   #strcpy
+     71              update_string(display_line[line2], line2);
+   \   000026   1D43         MOV.W   #0x1, R13
+   \   000028   3C40....     MOV.W   #display_line + 11, R12
+   \   00002C   ........     CALLA   #update_string
+     72              enable_display_update(); //change display
+   \   000030   ........     BRA     #enable_display_update
+     73              break;
+     74              
+     75            case TRIANGLE:
+     76              strcpy(display_line[line2], " triangle ");
+   \                     ??displayShapes_3:
+   \   000034   3D40....     MOV.W   #`?<Constant " triangle ">`, R13
+   \   000038   3C40....     MOV.W   #display_line + 11, R12
+   \   00003C   ........     CALLA   #strcpy
+     77              update_string(display_line[line2], line2);
+   \   000040   1D43         MOV.W   #0x1, R13
+   \   000042   3C40....     MOV.W   #display_line + 11, R12
+   \   000046   ........     CALLA   #update_string
+     78              enable_display_update(); //change display
+   \   00004A   ........     BRA     #enable_display_update
+     79              break;
+     80              
+     81            case FIGURE_EIGHT:
+     82              strcpy(display_line[line2], "figure 8");
+   \                     ??displayShapes_2:
+   \   00004E   3D40....     MOV.W   #`?<Constant "figure 8">`, R13
+   \   000052   3C40....     MOV.W   #display_line + 11, R12
+   \   000056   ........     CALLA   #strcpy
+     83              update_string(display_line[line2], line2);
+   \   00005A   1D43         MOV.W   #0x1, R13
+   \   00005C   3C40....     MOV.W   #display_line + 11, R12
+   \   000060   ........     CALLA   #update_string
+     84              enable_display_update(); //change display
+   \   000064   ........     BRA     #enable_display_update
+     85              break;
+     86            
+     87            case FIG_EIGHT_TWO:
+     88              strcpy(display_line[line2], "figure 8");
+   \                     ??displayShapes_5:
+   \   000068   3D40....     MOV.W   #`?<Constant "figure 8">`, R13
+   \   00006C   3C40....     MOV.W   #display_line + 11, R12
+   \   000070   ........     CALLA   #strcpy
+     89              update_string(display_line[line2], line2);
+   \   000074   1D43         MOV.W   #0x1, R13
+   \   000076   3C40....     MOV.W   #display_line + 11, R12
+   \   00007A   ........     CALLA   #update_string
+     90              enable_display_update(); //change display
+   \   00007E   ........     BRA     #enable_display_update
+     91              break;
+     92              
+     93              
+     94              
+     95            case HOLD:
+     96              strcpy(display_line[line2], "hold    ");
+   \                     ??displayShapes_4:
+   \   000082   3D40....     MOV.W   #`?<Constant "hold    ">`, R13
+   \   000086   3C40....     MOV.W   #display_line + 11, R12
+   \   00008A   ........     CALLA   #strcpy
+     97              update_string(display_line[line2], line2);
+   \   00008E   1D43         MOV.W   #0x1, R13
+   \   000090   3C40....     MOV.W   #display_line + 11, R12
+   \   000094   ........     CALLA   #update_string
+     98              enable_display_update(); //change display
+   \   000098   ........     BRA     #enable_display_update
+     99              break;
+    100            
+    101            default: 
+    102              break;
+    103            }
+    104          }
+    105              
+    106              
+    107          
+    108          //==============================================================================
+    109          //shape functions
+    110          //==============================================================================
+    111          
+
+   \                                 In  segment CODE, align 2
+    112          void drawCW_Circle(void){
+   \                     drawCW_Circle:
+    113                rightTurn();
+   \   000000   ........     CALLA   #rightTurn
+    114                if(shapeCount == circNumTurns){
+   \   000004   B290B80B.... CMP.W   #0xbb8, &shapeCount
+   \   00000A   0420         JNE     ??drawCW_Circle_0
+    115                  buttonPress = CIRCLE;
+   \   00000C   9243....     MOV.W   #0x1, &buttonPress
+    116                  shapeCount = RESET_STATE;
+   \   000010   8243....     MOV.W   #0x0, &shapeCount
+    117                }
+    118          }
+   \                     ??drawCW_Circle_0:
+   \   000014   1001         RETA
+    119          
+
+   \                                 In  segment CODE, align 2
+    120          void drawCCW_Circle(void){
+   \                     drawCCW_Circle:
+    121              leftTurn();
+   \   000000   ........     CALLA   #leftTurn
+    122              if(shapeCount == circNumTurns){
+   \   000004   B290B80B.... CMP.W   #0xbb8, &shapeCount
+   \   00000A   0520         JNE     ??drawCCW_Circle_0
+    123                buttonPress = HOLD;
+   \   00000C   B2400500.... MOV.W   #0x5, &buttonPress
+    124                shapeCount = RESET_STATE;
+   \   000012   8243....     MOV.W   #0x0, &shapeCount
+    125            }
+    126          }
+   \                     ??drawCCW_Circle_0:
+   \   000016   1001         RETA
+    127            
+
+   \                                 In  segment CODE, align 2
+    128           void drawFigureEight(void){
+   \                     drawFigureEight:
+    129             turnRightEight();
+   \   000000   ........     CALLA   #turnRightEight
+    130                if(shapeCount == FIG_EIGHT_TURNS){
+   \   000004   B290B004.... CMP.W   #0x4b0, &shapeCount
+   \   00000A   0520         JNE     ??drawFigureEight_0
+    131                  buttonPress = FIG_EIGHT_TWO;
+   \   00000C   B2400600.... MOV.W   #0x6, &buttonPress
+    132                  shapeCount = RESET_STATE;
+   \   000012   8243....     MOV.W   #0x0, &shapeCount
+    133                }
+    134           }
+   \                     ??drawFigureEight_0:
+   \   000016   1001         RETA
+
+   \                                 In  segment CODE, align 2
+    135          void drawFigureEightTwo(void){
+   \                     drawFigureEightTwo:
+    136             turnLeftEight();
+   \   000000   ........     CALLA   #turnLeftEight
+    137              if(shapeCount == FIG_EIGHT_TURNS){
+   \   000004   B290B004.... CMP.W   #0x4b0, &shapeCount
+   \   00000A   0520         JNE     ??drawFigureEightTwo_0
+    138                buttonPress = FIGURE_EIGHT_THREE;
+   \   00000C   B2400700.... MOV.W   #0x7, &buttonPress
+    139                shapeCount = RESET_STATE;
+   \   000012   8243....     MOV.W   #0x0, &shapeCount
+    140            }
+    141          }
+   \                     ??drawFigureEightTwo_0:
+   \   000016   1001         RETA
+    142          
+
+   \                                 In  segment CODE, align 2
+    143          void drawFigureEightThree(void){
+   \                     drawFigureEightThree:
+    144            turnRightEight();
+   \   000000   ........     CALLA   #turnRightEight
+    145            if(shapeCount == FIG_EIGHT_TURNS){
+   \   000004   B290B004.... CMP.W   #0x4b0, &shapeCount
+   \   00000A   0420         JNE     ??drawFigureEightThree_0
+    146                  buttonPress = FIGURE_EIGHT_FINISH;
+   \   00000C   B242....     MOV.W   #0x8, &buttonPress
+    147                  shapeCount = RESET_STATE;
+   \   000010   8243....     MOV.W   #0x0, &shapeCount
+    148                }
+    149          }
+   \                     ??drawFigureEightThree_0:
+   \   000014   1001         RETA
+    150          
+
+   \                                 In  segment CODE, align 2
+    151          void drawFigureEightFinish(void){
+   \                     drawFigureEightFinish:
+    152            turnLeftEight();
+   \   000000   ........     CALLA   #turnLeftEight
+    153            if(shapeCount == FIG_EIGHT_TURNS){
+   \   000004   B290B004.... CMP.W   #0x4b0, &shapeCount
+   \   00000A   0520         JNE     ??drawFigureEightFinish_0
+    154              buttonPress = HOLD;
+   \   00000C   B2400500.... MOV.W   #0x5, &buttonPress
+    155              shapeCount = RESET_STATE;
+   \   000012   8243....     MOV.W   #0x0, &shapeCount
+    156            }
+    157          }
+   \                     ??drawFigureEightFinish_0:
+   \   000016   1001         RETA
+    158          
+
+   \                                 In  segment CODE, align 2
+    159          void drawTriangle(void){
+   \                     drawTriangle:
+    160            if(triangleCount%ODD){
+   \   000000   2E43         MOV.W   #0x2, R14
+   \   000002   1C42....     MOV.W   &triangleCount, R12
+   \   000006   ........     CALLA   #?DivMod16s
+   \   00000A   0E93         CMP.W   #0x0, R14
+   \   00000C   0324         JEQ     ??drawTriangle_1
+    161              trianglePoint();
+   \   00000E   ........     CALLA   #trianglePoint
+   \   000012   023C         JMP     ??drawTriangle_0
+    162            }else{
+    163              triangleLeg();
+   \                     ??drawTriangle_1:
+   \   000014   ........     CALLA   #triangleLeg
+    164            }
+    165            
+    166            if(triangleCount == TRIANGLE_SIDES){
+   \                     ??drawTriangle_0:
+   \   000018   B2900C00.... CMP.W   #0xc, &triangleCount
+   \   00001E   0520         JNE     ??drawTriangle_2
+    167              triangleCount = RESET_STATE;
+   \   000020   8243....     MOV.W   #0x0, &triangleCount
+    168              buttonPress = HOLD;
+   \   000024   B2400500.... MOV.W   #0x5, &buttonPress
+    169            }
+    170              
+    171          }
+   \                     ??drawTriangle_2:
+   \   00002A   1001         RETA
+    172          
+
+   \                                 In  segment CODE, align 2
+    173          void triangleLeg(void){
+   \                     triangleLeg:
+    174            straightLine();
+   \   000000   ........     CALLA   #straightLine
+    175            if(shapeCount == LINE_LENGTH){
+   \   000004   B290FA00.... CMP.W   #0xfa, &shapeCount
+   \   00000A   0420         JNE     ??triangleLeg_0
+    176              triangleCount++;
+   \   00000C   9253....     ADD.W   #0x1, &triangleCount
+    177              shapeCount = RESET_STATE;
+   \   000010   8243....     MOV.W   #0x0, &shapeCount
+    178            }
+    179          }
+   \                     ??triangleLeg_0:
+   \   000014   1001         RETA
+    180          
+
+   \                                 In  segment CODE, align 2
+    181          void trianglePoint(void){
+   \                     trianglePoint:
+    182            sharpTurnRight();
+   \   000000   ........     CALLA   #sharpTurnRight
+    183            if(shapeCount == TURN_ANGLE){
+   \   000004   B2902C01.... CMP.W   #0x12c, &shapeCount
+   \   00000A   0420         JNE     ??trianglePoint_0
+    184              triangleCount++;
+   \   00000C   9253....     ADD.W   #0x1, &triangleCount
+    185              shapeCount = RESET_STATE;
+   \   000010   8243....     MOV.W   #0x0, &shapeCount
+    186            }
+    187          }
+   \                     ??trianglePoint_0:
+   \   000014   1001         RETA
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  circle ">`:
+   \   000000   202063697263 DC8 "  circle "
+   \            6C652000    
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " triangle ">`:
+   \   000000   20747269616E DC8 " triangle "
+   \            676C652000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "figure 8">`:
+   \   000000   666967757265 DC8 "figure 8"
+   \            203800      
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "hold    ">`:
+   \   000000   686F6C642020 DC8 "hold    "
+   \            202000      
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   displayShapes
+        0   -> enable_display_update
+        4   -> strcpy
+        4   -> update_string
+      4   drawCCW_Circle
+        4   -> leftTurn
+      4   drawCW_Circle
+        4   -> rightTurn
+      4   drawFigureEight
+        4   -> turnRightEight
+      4   drawFigureEightFinish
+        4   -> turnLeftEight
+      4   drawFigureEightThree
+        4   -> turnRightEight
+      4   drawFigureEightTwo
+        4   -> turnLeftEight
+      4   drawTriangle
+        4   -> triangleLeg
+        4   -> trianglePoint
+        4 ?DivMod16s
+      4   runShapes
+        0   -> drawCCW_Circle
+        0   -> drawFigureEight
+        0   -> drawFigureEightFinish
+        0   -> drawFigureEightThree
+        0   -> drawFigureEightTwo
+        0   -> drawTriangle
+        0   -> resetMotors
+      4   triangleLeg
+        4   -> straightLine
+      4   trianglePoint
+        4   -> sharpTurnRight
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      10  ?<Constant "  circle ">
+      11  ?<Constant " triangle ">
+       9  ?<Constant "figure 8">
+       9  ?<Constant "hold    ">
+     156  displayShapes
+      24  drawCCW_Circle
+      22  drawCW_Circle
+      24  drawFigureEight
+      24  drawFigureEightFinish
+      22  drawFigureEightThree
+      24  drawFigureEightTwo
+      44  drawTriangle
+       2  prevButton
+      76  runShapes
+       2  triangleCount
+      22  triangleLeg
+      22  trianglePoint
+
+ 
+ 460 bytes in segment CODE
+  39 bytes in segment DATA16_C
+   4 bytes in segment DATA16_Z
+ 
+ 460 bytes of CODE  memory
+  39 bytes of CONST memory
+   4 bytes of DATA  memory
+
+Errors: none
+Warnings: none

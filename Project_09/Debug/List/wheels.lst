@@ -1,0 +1,412 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           16/Apr/2020  11:08:59
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_09\wheels.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EW484.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_09\wheels.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_09\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_09\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_09\Debug\List\wheels.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_09\Debug\Obj\wheels.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_09\wheels.c
+      1          //==============================================================================
+      2          // Filename : wheels.c
+      3          //
+      4          // Description: This file contains the functions for wheel movement
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: February 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          
+     11          #include  "functions.h"
+     12          #include  "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x454
+   \   union <unnamed> _A_TB3CCR1_L
+   \                     _A_TB3CCR1_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x456
+   \   union <unnamed> _A_TB3CCR2_L
+   \                     _A_TB3CCR2_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x458
+   \   union <unnamed> _A_TB3CCR3_L
+   \                     _A_TB3CCR3_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x45a
+   \   union <unnamed> _A_TB3CCR4_L
+   \                     _A_TB3CCR4_L:
+   \   000000                DS8 2
+     13          #include "macros.h"
+     14          #include <string.h>
+     15          
+     16          //GLOBALS=======================================================================
+     17          extern unsigned int myTime;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     18          int waitCount = RESET_STATE;
+   \                     waitCount:
+   \   000000                DS8 2
+     19          extern unsigned int prevButton;
+     20          extern unsigned int buttonPress;
+     21          extern int wheelCount;
+     22          
+     23          extern volatile unsigned int wheel_state;
+     24          
+     25          extern unsigned int black_line_flag;
+     26          extern unsigned int one_second_flag;
+     27          extern unsigned int wait_count;
+     28          
+     29          extern unsigned int ADC_Left_Detect;
+     30          extern unsigned int ADC_Right_Detect;
+     31          
+     32          extern volatile unsigned int command_count;
+     33          extern int command_duration;
+     34          extern int serial_display;
+     35          
+     36          extern char display_line[numLines][strSize];
+     37          extern volatile unsigned char display_changed;
+
+   \                                 In  segment DATA16_I, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     38          int wheel_one_time = TRUE;
+   \                     wheel_one_time:
+   \   000000                DS8 2
+   \   000002                REQUIRE `?<Initializer for wheel_one_time>`
+     39          //==============================================================================
+     40          
+
+   \                                 In  segment CODE, align 2
+     41          void stop_Movement(void){
+   \                     stop_Movement:
+     42            RIGHT_FORWARD_SPEED = WHEEL_OFF;
+   \   000000   82435404     MOV.W   #0x0, &0x454
+     43            LEFT_FORWARD_SPEED = WHEEL_OFF;
+   \   000004   82435604     MOV.W   #0x0, &0x456
+     44            RIGHT_REVERSE_SPEED = WHEEL_OFF;
+   \   000008   82435804     MOV.W   #0x0, &0x458
+     45            LEFT_REVERSE_SPEED = WHEEL_OFF;
+   \   00000C   82435A04     MOV.W   #0x0, &0x45a
+     46          }
+   \   000010   1001         RETA
+   \   000012                REQUIRE _A_TB3CCR1_L
+   \   000012                REQUIRE _A_TB3CCR2_L
+   \   000012                REQUIRE _A_TB3CCR3_L
+   \   000012                REQUIRE _A_TB3CCR4_L
+     47          
+
+   \                                 In  segment CODE, align 2
+     48          void move_Forward(void){
+   \                     move_Forward:
+     49            RIGHT_REVERSE_SPEED = WHEEL_OFF;          // right reverse off
+   \   000000   82435804     MOV.W   #0x0, &0x458
+     50            LEFT_REVERSE_SPEED = WHEEL_OFF;           // left reverse off
+   \   000004   82435A04     MOV.W   #0x0, &0x45a
+     51            RIGHT_FORWARD_SPEED = HALF_SPEED;               // right forward on
+   \   000008   B240204E5404 MOV.W   #0x4e20, &0x454
+     52            LEFT_FORWARD_SPEED = HALF_SPEED;                // left forward on 
+   \   00000E   B240204E5604 MOV.W   #0x4e20, &0x456
+     53          }
+   \   000014   1001         RETA
+   \   000016                REQUIRE _A_TB3CCR3_L
+   \   000016                REQUIRE _A_TB3CCR4_L
+   \   000016                REQUIRE _A_TB3CCR1_L
+   \   000016                REQUIRE _A_TB3CCR2_L
+     54          
+
+   \                                 In  segment CODE, align 2
+     55          void move_Reverse(void){
+   \                     move_Reverse:
+     56            RIGHT_FORWARD_SPEED = WHEEL_OFF;          // right foward off
+   \   000000   82435404     MOV.W   #0x0, &0x454
+     57            LEFT_FORWARD_SPEED = WHEEL_OFF;           // left forward off
+   \   000004   82435604     MOV.W   #0x0, &0x456
+     58            RIGHT_REVERSE_SPEED = FAST;               // right reverse on
+   \   000008   B24030755804 MOV.W   #0x7530, &0x458
+     59            LEFT_REVERSE_SPEED = HALF_SPEED;          // left reverse on 
+   \   00000E   B240204E5A04 MOV.W   #0x4e20, &0x45a
+     60          }
+   \   000014   1001         RETA
+   \   000016                REQUIRE _A_TB3CCR1_L
+   \   000016                REQUIRE _A_TB3CCR2_L
+   \   000016                REQUIRE _A_TB3CCR3_L
+   \   000016                REQUIRE _A_TB3CCR4_L
+     61          
+
+   \                                 In  segment CODE, align 2
+     62          void spin_CW(void){
+   \                     spin_CW:
+     63            RIGHT_FORWARD_SPEED = WHEEL_OFF;          // right forward off
+   \   000000   82435404     MOV.W   #0x0, &0x454
+     64            LEFT_REVERSE_SPEED = WHEEL_OFF;           // left reverese off
+   \   000004   82435A04     MOV.W   #0x0, &0x45a
+     65            RIGHT_REVERSE_SPEED = FAST;               // right reverse on 
+   \   000008   B24030755804 MOV.W   #0x7530, &0x458
+     66            LEFT_FORWARD_SPEED = SLOW;                // left forward on
+   \   00000E   B24010275604 MOV.W   #0x2710, &0x456
+     67          }
+   \   000014   1001         RETA
+   \   000016                REQUIRE _A_TB3CCR1_L
+   \   000016                REQUIRE _A_TB3CCR4_L
+   \   000016                REQUIRE _A_TB3CCR3_L
+   \   000016                REQUIRE _A_TB3CCR2_L
+     68          
+
+   \                                 In  segment CODE, align 2
+     69          void spin_CCW(void){
+   \                     spin_CCW:
+     70            LEFT_FORWARD_SPEED = WHEEL_OFF;           // left forward off
+   \   000000   82435604     MOV.W   #0x0, &0x456
+     71            RIGHT_REVERSE_SPEED = WHEEL_OFF;          // right reverse off
+   \   000004   82435804     MOV.W   #0x0, &0x458
+     72            LEFT_REVERSE_SPEED = FAST;                // left reverse on
+   \   000008   B24030755A04 MOV.W   #0x7530, &0x45a
+     73            RIGHT_FORWARD_SPEED = SLOW;               // right forward on
+   \   00000E   B24010275404 MOV.W   #0x2710, &0x454
+     74          }
+   \   000014   1001         RETA
+   \   000016                REQUIRE _A_TB3CCR2_L
+   \   000016                REQUIRE _A_TB3CCR3_L
+   \   000016                REQUIRE _A_TB3CCR4_L
+   \   000016                REQUIRE _A_TB3CCR1_L
+     75          
+
+   \                                 In  segment CODE, align 2
+     76          void turn_CW(void){
+   \                     turn_CW:
+     77            LEFT_REVERSE_SPEED = WHEEL_OFF;
+   \   000000   82435A04     MOV.W   #0x0, &0x45a
+     78            RIGHT_REVERSE_SPEED = WHEEL_OFF;
+   \   000004   82435804     MOV.W   #0x0, &0x458
+     79            RIGHT_FORWARD_SPEED = SLOW;
+   \   000008   B24010275404 MOV.W   #0x2710, &0x454
+     80            LEFT_FORWARD_SPEED = FAST;
+   \   00000E   B24030755604 MOV.W   #0x7530, &0x456
+     81          }
+   \   000014   1001         RETA
+   \   000016                REQUIRE _A_TB3CCR4_L
+   \   000016                REQUIRE _A_TB3CCR3_L
+   \   000016                REQUIRE _A_TB3CCR1_L
+   \   000016                REQUIRE _A_TB3CCR2_L
+     82          
+     83          
+
+   \                                 In  segment CODE, align 2
+     84          void wheel_control(void){
+   \                     wheel_control:
+     85              switch(wheel_state){
+   \   000000   1F42....     MOV.W   &wheel_state, R15
+   \   000004   0F83         SUB.W   #0x0, R15
+   \   000006   0A24         JEQ     ??wheel_control_5
+   \   000008   1F83         SUB.W   #0x1, R15
+   \   00000A   1124         JEQ     ??wheel_control_6
+   \   00000C   1F83         SUB.W   #0x1, R15
+   \   00000E   2224         JEQ     ??wheel_control_7
+   \   000010   3F800300     SUB.W   #0x3, R15
+   \   000014   3224         JEQ     ??wheel_control_8
+   \   000016   1F83         SUB.W   #0x1, R15
+   \   000018   4224         JEQ     ??wheel_control_9
+   \   00001A   1001         RETA
+     86              case HOLD:
+     87                command_count = RESET_STATE;
+   \                     ??wheel_control_5:
+   \   00001C   8243....     MOV.W   #0x0, &command_count
+     88                if(wheel_one_time){
+   \   000020   8293....     CMP.W   #0x0, &wheel_one_time
+   \   000024   0224         JEQ     ??wheel_control_10
+     89                  /*lcd_BIG_mid();
+     90                  strcpy(display_line[line2], "   HOLD   ");
+     91                  update_string(display_line[line2], line2);
+     92                  display_changed = TRUE;*/
+     93                  wheel_one_time = FALSE;
+   \   000026   8243....     MOV.W   #0x0, &wheel_one_time
+     94                }
+     95                
+     96                stop_Movement();
+   \                     ??wheel_control_10:
+   \   00002A   ........     BRA     #stop_Movement
+     97                break;
+     98              case FORWARD:
+     99                if(wheel_one_time){
+   \                     ??wheel_control_6:
+   \   00002E   8293....     CMP.W   #0x0, &wheel_one_time
+   \   000032   0524         JEQ     ??wheel_control_11
+    100                  serial_display = FORWARD_DISP;
+   \   000034   B2400600.... MOV.W   #0x6, &serial_display
+    101                  wheel_one_time = FALSE;
+   \   00003A   8243....     MOV.W   #0x0, &wheel_one_time
+    102                }
+    103                move_Forward();
+   \                     ??wheel_control_11:
+   \   00003E   ........     CALLA   #move_Forward
+    104                if(command_count >= command_duration){
+   \   000042   9292........ CMP.W   &command_duration, &command_count
+   \   000048   3C28         JNC     ??wheel_control_4
+    105                  wheel_state = HOLD;
+   \   00004A   8243....     MOV.W   #0x0, &wheel_state
+    106                  wheel_one_time = TRUE;
+   \   00004E   9243....     MOV.W   #0x1, &wheel_one_time
+    107                }
+    108                break;
+   \   000052   1001         RETA
+    109              case REVERSE:
+    110                if(wheel_one_time){
+   \                     ??wheel_control_7:
+   \   000054   8293....     CMP.W   #0x0, &wheel_one_time
+   \   000058   0524         JEQ     ??wheel_control_12
+    111                  serial_display = REVERSE_DISP;
+   \   00005A   B2400700.... MOV.W   #0x7, &serial_display
+    112                  wheel_one_time = FALSE;
+   \   000060   8243....     MOV.W   #0x0, &wheel_one_time
+    113                }
+    114                
+    115                move_Reverse();
+   \                     ??wheel_control_12:
+   \   000064   ........     CALLA   #move_Reverse
+    116                
+    117                if(command_count >= command_duration){
+   \   000068   9292........ CMP.W   &command_duration, &command_count
+   \   00006E   2928         JNC     ??wheel_control_4
+    118                  wheel_state = HOLD;
+   \   000070   8243....     MOV.W   #0x0, &wheel_state
+    119                  wheel_one_time = TRUE;
+   \   000074   9243....     MOV.W   #0x1, &wheel_one_time
+    120                }
+    121                break;
+   \   000078   1001         RETA
+    122              case RIGHT_TURN:
+    123                if(wheel_one_time){
+   \                     ??wheel_control_8:
+   \   00007A   8293....     CMP.W   #0x0, &wheel_one_time
+   \   00007E   0424         JEQ     ??wheel_control_13
+    124                  serial_display = RIGHT_DISP;
+   \   000080   B242....     MOV.W   #0x8, &serial_display
+    125                  wheel_one_time = FALSE;
+   \   000084   8243....     MOV.W   #0x0, &wheel_one_time
+    126                }
+    127                
+    128                spin_CW();
+   \                     ??wheel_control_13:
+   \   000088   ........     CALLA   #spin_CW
+    129                
+    130                if(command_count >= command_duration){
+   \   00008C   9292........ CMP.W   &command_duration, &command_count
+   \   000092   1728         JNC     ??wheel_control_4
+    131                  wheel_state = HOLD;
+   \   000094   8243....     MOV.W   #0x0, &wheel_state
+    132                  wheel_one_time = TRUE;
+   \   000098   9243....     MOV.W   #0x1, &wheel_one_time
+    133                }
+    134                break;
+   \   00009C   1001         RETA
+    135              case LEFT_TURN:
+    136                if(wheel_one_time){
+   \                     ??wheel_control_9:
+   \   00009E   8293....     CMP.W   #0x0, &wheel_one_time
+   \   0000A2   0524         JEQ     ??wheel_control_14
+    137                  serial_display = LEFT_DISP;
+   \   0000A4   B2400900.... MOV.W   #0x9, &serial_display
+    138                  wheel_one_time = FALSE;
+   \   0000AA   8243....     MOV.W   #0x0, &wheel_one_time
+    139                }
+    140                
+    141                spin_CCW();
+   \                     ??wheel_control_14:
+   \   0000AE   ........     CALLA   #spin_CCW
+    142                if(command_count >= command_duration){
+   \   0000B2   9292........ CMP.W   &command_duration, &command_count
+   \   0000B8   0428         JNC     ??wheel_control_4
+    143                  wheel_state = HOLD;
+   \   0000BA   8243....     MOV.W   #0x0, &wheel_state
+    144                  wheel_one_time = TRUE;
+   \   0000BE   9243....     MOV.W   #0x1, &wheel_one_time
+    145                }
+    146                break;   
+    147              default: break;
+    148              }
+    149          }
+   \                     ??wheel_control_4:
+   \   0000C2   1001         RETA
+
+   \                                 In  segment DATA16_ID, align 2, align-sorted
+   \                     `?<Initializer for wheel_one_time>`:
+   \   000000   0100         DC16 1
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   move_Forward
+      4   move_Reverse
+      4   spin_CCW
+      4   spin_CW
+      4   stop_Movement
+      4   turn_CW
+      4   wheel_control
+        4   -> move_Forward
+        4   -> move_Reverse
+        4   -> spin_CCW
+        4   -> spin_CW
+        0   -> stop_Movement
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       2  ?<Initializer for wheel_one_time>
+       2  _A_TB3CCR1_L
+       2  _A_TB3CCR2_L
+       2  _A_TB3CCR3_L
+       2  _A_TB3CCR4_L
+      22  move_Forward
+      22  move_Reverse
+      22  spin_CCW
+      22  spin_CW
+      18  stop_Movement
+      22  turn_CW
+       2  waitCount
+     196  wheel_control
+       2  wheel_one_time
+
+ 
+ 324 bytes in segment CODE
+   8 bytes in segment DATA16_AN
+   2 bytes in segment DATA16_I
+   2 bytes in segment DATA16_ID
+   2 bytes in segment DATA16_Z
+ 
+ 324 bytes of CODE  memory
+   2 bytes of CONST memory
+   4 bytes of DATA  memory (+ 8 bytes shared)
+
+Errors: none
+Warnings: none

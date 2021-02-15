@@ -1,0 +1,573 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           28/Mar/2020  17:12:53
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Homework_08\main.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWA80.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Homework_08\main.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_08\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_08\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_08\Debug\List\main.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_08\Debug\Obj\main.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Homework_08\main.c
+      1          //------------------------------------------------------------------------------
+      2          //
+      3          //  Description: This file contains the Main Routine - "While" Operating System
+      4          //
+      5          //
+      6          //  Jim Carlson
+      7          //  Jan 2018
+      8          //  Built with IAR Embedded Workbench Version: V4.10A/W32 (7.11.2)
+      9          //------------------------------------------------------------------------------
+     10          
+     11          //------------------------------------------------------------------------------
+     12          #include  "functions.h"
+     13          #include  "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x130
+   \   union <unnamed> _A_PM5CTL0_L
+   \                     _A_PM5CTL0_L:
+   \   000000                DS8 2
+     14          #include "macros.h"
+     15          #include <string.h>
+     16          
+     17          
+     18          // Function Prototypes
+     19          void main(void);
+     20          void Init_Conditions(void);
+     21          void Init_LEDs(void);
+     22          
+     23            // Global Variables
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     24          volatile char slow_input_down;
+   \                     slow_input_down:
+   \   000000                DS8 1
+     25          extern char display_line[numLines][strSize];
+     26          extern char *display[numLines];
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     27          unsigned char display_mode;
+   \                     display_mode:
+   \   000000                DS8 1
+     28          extern volatile unsigned char display_changed;
+     29          extern volatile unsigned char update_display;
+     30          extern volatile unsigned int update_display_count;
+     31          extern volatile unsigned int Time_Sequence;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     32          unsigned int prevTime_Sequence = RESET_STATE; 
+   \                     prevTime_Sequence:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     33          unsigned int myTime = RESET_STATE;
+   \                     myTime:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     34          unsigned int buttonState = HOLD; //initialize state to be circle
+   \                     buttonState:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_I, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     35          volatile char one_time = TRUE;
+   \                     one_time:
+   \   000000                DS8 1
+   \   000001                REQUIRE `?<Initializer for one_time>`
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     36          unsigned int test_value;
+   \                     test_value:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     37          char chosen_direction;
+   \                     chosen_direction:
+   \   000000                DS8 1
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     38          char change;
+   \                     change:
+   \   000000                DS8 1
+
+   \                                 In  segment DATA16_I, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     39          unsigned int emitter_display_change = TRUE;
+   \                     emitter_display_change:
+   \   000000                DS8 2
+   \   000002                REQUIRE `?<Initializer for emitter_display_change>`
+     40          
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     41          volatile unsigned int wheel_state = HOLD;
+   \                     wheel_state:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     42          volatile unsigned int main_state = HOLD;
+   \                     main_state:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     43          volatile unsigned int next_state = RESET_STATE;
+   \                     next_state:
+   \   000000                DS8 2
+     44          extern int display_state;
+     45          
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     46          unsigned int black_line_flag = FALSE;
+   \                     black_line_flag:
+   \   000000                DS8 2
+     47          extern unsigned int one_second_flag;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     48          unsigned int main_wait_count = RESET_STATE;
+   \                     main_wait_count:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     49          unsigned int wait_count = RESET_STATE;
+   \                     wait_count:
+   \   000000                DS8 2
+     50          
+     51          extern unsigned int ADC_Left_Detect;
+     52          extern unsigned int ADC_Right_Detect;
+     53          
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     54          int UCA1_index;
+   \                     UCA1_index:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     55          int UCA0_index = RESET_STATE;
+   \                     UCA0_index:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_I, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     56          char test_command[NCSU_SIZE] = "NCSU  #1";
+   \                     test_command:
+   \   000000                DS8 8
+   \   000008                REQUIRE `?<Initializer for test_command>`
+     57          extern unsigned int usb_rx_ring_rd;
+     58          extern volatile unsigned int usb_rx_ring_wr;
+     59          extern volatile char USB_Char_Rx[SMALL_RING_SIZE];
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     60          volatile char process_buf[LARGE_RING_SIZE];
+   \                     process_buf:
+   \   000000                DS8 32
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     61          char receive_char[NCSU_SIZE];
+   \                     receive_char:
+   \   000000                DS8 8
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     62          int process_ready = FALSE;
+   \                     process_ready:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     63          int process_index = BEGINNING;
+   \                     process_index:
+   \   000000                DS8 2
+     64          
+     65          
+
+   \                                 In  segment CODE, align 2
+     66          void main(void){
+   \                     main:
+     67          //------------------------------------------------------------------------------
+     68          // Main Program
+     69          // This is the main routine for the program. Execution of code starts here.
+     70          // The operating system is Back Ground Fore Ground.
+     71          //
+     72          //------------------------------------------------------------------------------
+     73          // Disable the GPIO power-on default high-impedance mode to activate
+     74          // previously configured port settings
+     75            PM5CTL0 &= ~LOCKLPM5;
+   \   000000   92C33001     BIC.W   #0x1, &0x130
+     76            Init_Ports();                        // Initialize Ports
+   \   000004   ........     CALLA   #Init_Ports
+     77            Init_Clocks();                       // Initialize Clock System
+   \   000008   ........     CALLA   #Init_Clocks
+     78            Init_Conditions();                   // Initialize Variables and Initial Conditions
+   \   00000C   ........     CALLA   #Init_Conditions
+     79            Init_Timers();                        // Initialize Timers
+   \   000010   ........     CALLA   #Init_Timers
+     80            Init_LCD();                          // Initialize LCD
+   \   000014   ........     CALLA   #Init_LCD
+     81            Init_Wheels();
+   \   000018   ........     CALLA   #Init_Wheels
+     82            Init_ADC();
+   \   00001C   ........     CALLA   #Init_ADC
+     83            Init_Serial_UCA0();                   // Initialize Serial communication
+   \   000020   ........     CALLA   #Init_Serial_UCA0
+     84            Init_Serial_UCA1();
+   \   000024   ........     CALLA   #Init_Serial_UCA1
+     85            
+     86          // Place the contents of what you want on the display, in between the quotes
+     87          // Limited to 10 characters per line
+     88          //
+     89          
+     90            strcpy(display_line[line1], "          ");
+   \   000028   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   00002C   3C40....     MOV.W   #display_line, R12
+   \   000030   ........     CALLA   #strcpy
+     91            update_string(display_line[line1], line1);
+   \   000034   0D43         MOV.W   #0x0, R13
+   \   000036   ........     CALLA   #update_string
+     92            strcpy(display_line[line2], "          ");
+   \   00003A   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   00003E   3C40....     MOV.W   #display_line + 11, R12
+   \   000042   ........     CALLA   #strcpy
+     93            update_string(display_line[line2], line2);
+   \   000046   1D43         MOV.W   #0x1, R13
+   \   000048   3C40....     MOV.W   #display_line + 11, R12
+   \   00004C   ........     CALLA   #update_string
+     94            strcpy(display_line[line3], "   baud   ");
+   \   000050   3D40....     MOV.W   #`?<Constant "   baud   ">`, R13
+   \   000054   3C40....     MOV.W   #display_line + 22, R12
+   \   000058   ........     CALLA   #strcpy
+     95            update_string(display_line[line3], line3);
+   \   00005C   2D43         MOV.W   #0x2, R13
+   \   00005E   3C40....     MOV.W   #display_line + 22, R12
+   \   000062   ........     CALLA   #update_string
+     96            strcpy(display_line[line4], "          ");
+   \   000066   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   00006A   3C40....     MOV.W   #display_line + 33, R12
+   \   00006E   ........     CALLA   #strcpy
+     97            update_string(display_line[line4], line4);
+   \   000072   3D400300     MOV.W   #0x3, R13
+   \   000076   3C40....     MOV.W   #display_line + 33, R12
+   \   00007A   ........     CALLA   #update_string
+     98            enable_display_update();
+   \   00007E   ........     CALLA   #enable_display_update
+     99            display_changed = TRUE;
+   \   000082   D243....     MOV.B   #0x1, &display_changed
+    100          
+    101          
+    102            UCA0_index = RESET_STATE;
+   \   000086   8243....     MOV.W   #0x0, &UCA0_index
+    103            UCA1_index = RESET_STATE;
+   \   00008A   8243....     MOV.W   #0x0, &UCA1_index
+    104            //UCA0IE |= UCRXIE; // Enable RX interrupt
+    105            //UCA1IE |= UCRXIE; // Enable Rx interrupt
+    106          //------------------------------------------------------------------------------
+    107          // Begining of the "While" Operating System
+    108          //------------------------------------------------------------------------------
+    109            while(ALWAYS){  // Can the Operating system run
+    110              
+    111              switch(main_state){
+   \                     ??main_0:
+   \   00008E   1F42....     MOV.W   &main_state, R15
+   \   000092   0F83         SUB.W   #0x0, R15
+   \   000094   0624         JEQ     ??main_6
+   \   000096   2F83         SUB.W   #0x2, R15
+   \   000098   1424         JEQ     ??main_7
+   \   00009A   1F83         SUB.W   #0x1, R15
+   \   00009C   3624         JEQ     ??main_8
+   \   00009E   1F83         SUB.W   #0x1, R15
+   \   0000A0   593C         JMP     ??main_5
+    112              case HOLD:
+    113                if(one_second_flag){
+   \                     ??main_6:
+   \   0000A2   8293....     CMP.W   #0x0, &one_second_flag
+   \   0000A6   0424         JEQ     ??main_9
+    114                  main_wait_count ++;
+   \   0000A8   9253....     ADD.W   #0x1, &main_wait_count
+    115                  one_second_flag = FALSE;
+   \   0000AC   8243....     MOV.W   #0x0, &one_second_flag
+    116                }
+    117                if(wait_count == TWO_SECOND_PAUSE){
+   \                     ??main_9:
+   \   0000B0   A293....     CMP.W   #0x2, &wait_count
+   \   0000B4   4F20         JNE     ??main_5
+    118                  main_wait_count = RESET_STATE;
+   \   0000B6   8243....     MOV.W   #0x0, &main_wait_count
+    119                  main_state = next_state;
+   \   0000BA   9242........ MOV.W   &next_state, &main_state
+    120                }
+    121                break;
+   \   0000C0   493C         JMP     ??main_5
+    122              case RECEIVE:
+    123              if(usb_rx_ring_rd != usb_rx_ring_wr){
+   \                     ??main_7:
+   \   0000C2   9292........ CMP.W   &usb_rx_ring_wr, &usb_rx_ring_rd
+   \   0000C8   4524         JEQ     ??main_5
+    124                
+    125                  process_buf[usb_rx_ring_rd] = USB_Char_Rx[usb_rx_ring_rd];
+   \   0000CA   1F42....     MOV.W   &usb_rx_ring_rd, R15
+   \   0000CE   1E42....     MOV.W   &usb_rx_ring_rd, R14
+   \   0000D2   DE4F........ MOV.B   USB_Char_Rx(R15), process_buf(R14)
+    126                  
+    127                  if(process_buf[usb_rx_ring_rd] == 0x0A || process_buf[usb_rx_ring_rd] == 0x0D){
+   \   0000D8   1F42....     MOV.W   &usb_rx_ring_rd, R15
+   \   0000DC   FF900A00.... CMP.B   #0xa, process_buf(R15)
+   \   0000E2   0624         JEQ     ??main_10
+   \   0000E4   1F42....     MOV.W   &usb_rx_ring_rd, R15
+   \   0000E8   FF900D00.... CMP.B   #0xd, process_buf(R15)
+   \   0000EE   0420         JNE     ??main_11
+    128                    main_state = PROCESS;
+   \                     ??main_10:
+   \   0000F0   B2400300.... MOV.W   #0x3, &main_state
+    129                    break;
+   \   0000F6   2E3C         JMP     ??main_5
+    130                  }
+    131                  usb_rx_ring_rd++;
+   \                     ??main_11:
+   \   0000F8   9253....     ADD.W   #0x1, &usb_rx_ring_rd
+    132                  if(usb_rx_ring_rd >= (sizeof(USB_Char_Rx))){
+   \   0000FC   B2901000.... CMP.W   #0x10, &usb_rx_ring_rd
+   \   000102   2828         JNC     ??main_5
+    133                    usb_rx_ring_rd = BEGINNING;
+   \   000104   8243....     MOV.W   #0x0, &usb_rx_ring_rd
+    134                  }
+    135              }
+    136              
+    137              break;
+   \   000108   253C         JMP     ??main_5
+    138              case PROCESS:
+    139                receive_char[process_index] = process_buf[process_index];
+   \                     ??main_8:
+   \   00010A   1F42....     MOV.W   &process_index, R15
+   \   00010E   1E42....     MOV.W   &process_index, R14
+   \   000112   DE4F........ MOV.B   process_buf(R15), receive_char(R14)
+    140                process_buf[process_index] = '\0';                // clear out process buffer
+   \   000118   1F42....     MOV.W   &process_index, R15
+   \   00011C   CF43....     MOV.B   #0x0, process_buf(R15)
+    141                process_index++;
+   \   000120   9253....     ADD.W   #0x1, &process_index
+    142                if(process_buf[process_index] == 0x0A || process_buf[process_index] == 0x0D){
+   \   000124   1F42....     MOV.W   &process_index, R15
+   \   000128   FF900A00.... CMP.B   #0xa, process_buf(R15)
+   \   00012E   0624         JEQ     ??main_12
+   \   000130   1F42....     MOV.W   &process_index, R15
+   \   000134   FF900D00.... CMP.B   #0xd, process_buf(R15)
+   \   00013A   0C20         JNE     ??main_5
+    143                  process_index--;
+   \                     ??main_12:
+   \   00013C   B253....     ADD.W   #0xffff, &process_index
+    144                  receive_char[process_index] = '\0';
+   \   000140   1F42....     MOV.W   &process_index, R15
+   \   000144   CF43....     MOV.B   #0x0, receive_char(R15)
+    145                  main_state = HALT;
+   \   000148   A242....     MOV.W   #0x4, &main_state
+    146                  process_ready = TRUE;
+   \   00014C   9243....     MOV.W   #0x1, &process_ready
+    147                  process_index = BEGINNING;
+   \   000150   8243....     MOV.W   #0x0, &process_index
+    148                }
+    149              break;
+    150              case HALT:
+    151                break;
+    152              default: break;
+    153              }
+    154            
+    155              
+    156              Display_Process(); 
+   \                     ??main_5:
+   \   000154   ........     CALLA   #Display_Process
+    157              Serial_Display_Process();
+   \   000158   ........     CALLA   #Serial_Display_Process
+   \   00015C   983F         JMP     ??main_0
+   \   00015E   0343         NOP
+   \   000160                REQUIRE _A_PM5CTL0_L
+    158              //clock_process(); // update myTime
+    159              //Switches_Process(); //check switches
+    160            }
+    161          
+    162          //------------------------------------------------------------------------------
+    163          }
+    164          
+
+   \                                 In  segment CODE, align 2
+    165          void clear_LCD(void){
+   \                     clear_LCD:
+    166            strcpy(display_line[line1], "          ");
+   \   000000   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   000004   3C40....     MOV.W   #display_line, R12
+   \   000008   ........     CALLA   #strcpy
+    167            update_string(display_line[line1], line1);
+   \   00000C   0D43         MOV.W   #0x0, R13
+   \   00000E   ........     CALLA   #update_string
+    168            strcpy(display_line[line2], "          ");
+   \   000012   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   000016   3C40....     MOV.W   #display_line + 11, R12
+   \   00001A   ........     CALLA   #strcpy
+    169            update_string(display_line[line2], line2);
+   \   00001E   1D43         MOV.W   #0x1, R13
+   \   000020   3C40....     MOV.W   #display_line + 11, R12
+   \   000024   ........     CALLA   #update_string
+    170            strcpy(display_line[line3], "          ");
+   \   000028   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   00002C   3C40....     MOV.W   #display_line + 22, R12
+   \   000030   ........     CALLA   #strcpy
+    171            update_string(display_line[line3], line3);
+   \   000034   2D43         MOV.W   #0x2, R13
+   \   000036   3C40....     MOV.W   #display_line + 22, R12
+   \   00003A   ........     CALLA   #update_string
+    172            strcpy(display_line[line4], "          ");
+   \   00003E   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   000042   3C40....     MOV.W   #display_line + 33, R12
+   \   000046   ........     CALLA   #strcpy
+    173            update_string(display_line[line4], line4);
+   \   00004A   3D400300     MOV.W   #0x3, R13
+   \   00004E   3C40....     MOV.W   #display_line + 33, R12
+   \   000052   ........     CALLA   #update_string
+    174            enable_display_update();
+   \   000056   ........     CALLA   #enable_display_update
+    175            display_changed = TRUE;
+   \   00005A   D243....     MOV.B   #0x1, &display_changed
+    176          }
+   \   00005E   1001         RETA
+
+   \                                 In  segment DATA16_ID, align 1, align-sorted
+   \                     `?<Initializer for one_time>`:
+   \   000000   01           DC8 1
+
+   \                                 In  segment DATA16_ID, align 2, align-sorted
+   \                     `?<Initializer for emitter_display_change>`:
+   \   000000   0100         DC16 1
+
+   \                                 In  segment DATA16_ID, align 1, align-sorted
+   \                     `?<Initializer for test_command>`:
+   \   000000   4E4353552020 DC8 4EH, 43H, 53H, 55H, 20H, 20H, 23H, 31H
+   \            2331        
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "          ">`:
+   \   000000   202020202020 DC8 "          "
+   \            2020202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "   baud   ">`:
+   \   000000   202020626175 DC8 "   baud   "
+   \            6420202000  
+    177            
+    178          
+    179          
+    180          
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   clear_LCD
+        4   -> enable_display_update
+        4   -> strcpy
+        4   -> update_string
+      4   main
+        4   -> Display_Process
+        4   -> Init_ADC
+        4   -> Init_Clocks
+        4   -> Init_Conditions
+        4   -> Init_LCD
+        4   -> Init_Ports
+        4   -> Init_Serial_UCA0
+        4   -> Init_Serial_UCA1
+        4   -> Init_Timers
+        4   -> Init_Wheels
+        4   -> Serial_Display_Process
+        4   -> enable_display_update
+        4   -> strcpy
+        4   -> update_string
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      11  ?<Constant "          ">
+      11  ?<Constant "   baud   ">
+       2  ?<Initializer for emitter_display_change>
+       1  ?<Initializer for one_time>
+       8  ?<Initializer for test_command>
+       2  UCA0_index
+       2  UCA1_index
+       2  _A_PM5CTL0_L
+       2  black_line_flag
+       2  buttonState
+       1  change
+       1  chosen_direction
+      96  clear_LCD
+       1  display_mode
+       2  emitter_display_change
+     352  main
+       2  main_state
+       2  main_wait_count
+       2  myTime
+       2  next_state
+       1  one_time
+       2  prevTime_Sequence
+      32  process_buf
+       2  process_index
+       2  process_ready
+       8  receive_char
+       1  slow_input_down
+       8  test_command
+       2  test_value
+       2  wait_count
+       2  wheel_state
+
+ 
+ 448 bytes in segment CODE
+   2 bytes in segment DATA16_AN
+  22 bytes in segment DATA16_C
+  11 bytes in segment DATA16_I
+  11 bytes in segment DATA16_ID
+  72 bytes in segment DATA16_Z
+ 
+ 448 bytes of CODE  memory
+  33 bytes of CONST memory
+  83 bytes of DATA  memory (+ 2 bytes shared)
+
+Errors: none
+Warnings: none

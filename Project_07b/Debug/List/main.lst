@@ -1,0 +1,558 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           24/Apr/2020  14:22:13
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_07b\main.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWE082.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_07b\main.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\Debug\List\main.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_07b\Debug\Obj\main.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_07b\main.c
+      1          //------------------------------------------------------------------------------
+      2          //
+      3          //  Description: This file contains the Main Routine - "While" Operating System
+      4          //
+      5          //
+      6          //  Jim Carlson
+      7          //  Jan 2018
+      8          //  Built with IAR Embedded Workbench Version: V4.10A/W32 (7.11.2)
+      9          //------------------------------------------------------------------------------
+     10          
+     11          //------------------------------------------------------------------------------
+     12          #include  "functions.h"
+     13          #include  "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x130
+   \   union <unnamed> _A_PM5CTL0_L
+   \                     _A_PM5CTL0_L:
+   \   000000                DS8 2
+     14          #include "macros.h"
+     15          #include <string.h>
+     16          
+     17          
+     18          // Function Prototypes
+     19          void main(void);
+     20          void Init_Conditions(void);
+     21          void Init_LEDs(void);
+     22          
+     23            // Global Variables
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     24          volatile char slow_input_down;
+   \                     slow_input_down:
+   \   000000                DS8 1
+     25          extern char display_line[numLines][strSize];
+     26          extern char *display[numLines];
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     27          unsigned char display_mode;
+   \                     display_mode:
+   \   000000                DS8 1
+     28          extern volatile unsigned char display_changed;
+     29          extern volatile unsigned char update_display;
+     30          extern volatile unsigned int update_display_count;
+     31          extern volatile unsigned int Time_Sequence;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     32          unsigned int prevTime_Sequence = RESET_STATE; 
+   \                     prevTime_Sequence:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     33          unsigned int myTime = RESET_STATE;
+   \                     myTime:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     34          unsigned int buttonState = HOLD; 
+   \                     buttonState:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_I, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     35          volatile char one_time = TRUE;
+   \                     one_time:
+   \   000000                DS8 1
+   \   000001                REQUIRE `?<Initializer for one_time>`
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     36          unsigned int test_value;
+   \                     test_value:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     37          char chosen_direction;
+   \                     chosen_direction:
+   \   000000                DS8 1
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     38          char change;
+   \                     change:
+   \   000000                DS8 1
+
+   \                                 In  segment DATA16_I, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     39          unsigned int emitter_display_change = TRUE;
+   \                     emitter_display_change:
+   \   000000                DS8 2
+   \   000002                REQUIRE `?<Initializer for emitter_display_change>`
+
+   \                                 In  segment DATA16_I, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     40          unsigned int IOT_start = TRUE;
+   \                     IOT_start:
+   \   000000                DS8 2
+   \   000002                REQUIRE `?<Initializer for IOT_start>`
+     41          
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     42          volatile unsigned int wheel_state = HOLD;
+   \                     wheel_state:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     43          volatile unsigned int main_state = HOLD;
+   \                     main_state:
+   \   000000                DS8 2
+     44          extern volatile unsigned int next_state;
+     45          extern int display_state;
+     46          
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     47          unsigned int black_line_flag = FALSE;
+   \                     black_line_flag:
+   \   000000                DS8 2
+     48          extern unsigned int one_second_flag;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     49          unsigned int main_wait_count = RESET_STATE;
+   \                     main_wait_count:
+   \   000000                DS8 2
+     50          extern unsigned int wait_count;
+     51          
+     52          extern unsigned int ADC_Left_Detect;
+     53          extern unsigned int ADC_Right_Detect;
+     54          
+     55          extern unsigned int usb_rx_ring_rd;
+     56          extern volatile unsigned int usb_rx_ring_wr;
+     57          extern volatile char USB_Char_Rx[SMALL_RING_SIZE];
+     58          extern int UCA0_index;
+     59          extern int UCA1_index;
+     60          extern char receive_char[MAX_STR_SIZE];
+     61          extern char transmit_char[MAX_STR_SIZE];
+     62          
+     63          extern unsigned int Button_One;
+     64          extern unsigned int Button_Two;
+     65          
+     66          extern volatile unsigned int IOT_enable_count;
+     67          extern volatile char command_ready;
+     68          extern unsigned int FRAM_Command;
+     69          extern volatile unsigned int one_second_count;
+     70          extern char current_IOT_char;
+     71          extern int new_IOT_char;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     72          int Profile_Start = FALSE;
+   \                     Profile_Start:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     73          int LED_blink = FALSE;
+   \                     LED_blink:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     74          unsigned int ADC_conv = FALSE;
+   \                     ADC_conv:
+   \   000000                DS8 2
+     75          extern unsigned int follow_ready;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     76          unsigned int ADC_enable_count = BEGINNING;
+   \                     ADC_enable_count:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     77          unsigned int clock_running = FALSE;
+   \                     clock_running:
+   \   000000                DS8 2
+     78          extern unsigned int black_line_count;
+     79          extern unsigned int calibrated;
+     80          //------------------------------------------------------------------------------
+
+   \                                 In  segment CODE, align 2
+     81          void main(void){
+   \                     main:
+     82          //------------------------------------------------------------------------------
+     83          // Main Program
+     84          // This is the main routine for the program. Execution of code starts here.
+     85          // The operating system is Back Ground Fore Ground.
+     86          //
+     87          //------------------------------------------------------------------------------
+     88          // Disable the GPIO power-on default high-impedance mode to activate
+     89          // previously configured port settings
+     90            PM5CTL0 &= ~LOCKLPM5;
+   \   000000   92C33001     BIC.W   #0x1, &0x130
+     91            Init_Ports();                        // Initialize Ports
+   \   000004   ........     CALLA   #Init_Ports
+     92            Init_Clocks();                       // Initialize Clock System
+   \   000008   ........     CALLA   #Init_Clocks
+     93            Init_Conditions();                   // Initialize Variables and Initial Conditions
+   \   00000C   ........     CALLA   #Init_Conditions
+     94            Init_Timers();                        // Initialize Timers
+   \   000010   ........     CALLA   #Init_Timers
+     95            Init_LCD();                          // Initialize LCD
+   \   000014   ........     CALLA   #Init_LCD
+     96            Init_Wheels();
+   \   000018   ........     CALLA   #Init_Wheels
+     97            Init_ADC();
+   \   00001C   ........     CALLA   #Init_ADC
+     98            Init_Serial_UCA0();                   // Initialize Serial communication
+   \   000020   ........     CALLA   #Init_Serial_UCA0
+     99            Init_Serial_UCA1();
+   \   000024   ........     CALLA   #Init_Serial_UCA1
+    100            Init_Chars();                         // Initialize char display on screen
+   \   000028   ........     CALLA   #Init_Chars
+    101            
+    102          // Place the contents of what you want on the display, in between the quotes
+    103          // Limited to 10 characters per line
+    104          //
+    105          
+    106          
+    107            UCA0_index = BEGINNING;
+   \   00002C   8243....     MOV.W   #0x0, &UCA0_index
+    108            UCA1_index = BEGINNING;
+   \   000030   8243....     MOV.W   #0x0, &UCA1_index
+    109            main_state = CALIBRATING;
+   \   000034   B2400500.... MOV.W   #0x5, &main_state
+    110          //------------------------------------------------------------------------------
+    111          // Begining of the "While" Operating System
+    112          //------------------------------------------------------------------------------
+    113            while(ALWAYS){  // Can the Operating system run
+    114          
+    115                  /*if(IOT_start){              // Only do this on start up 
+    116                if(IOT_enable_count > IOT_WAIT_TIME){
+    117                  IOT_enable_count = RESET_STATE;
+    118                  P5OUT |= IOT_RESET;     // set IOT_RESET inactive (high)
+    119                  main_state = START;
+    120                  IOT_start = FALSE;
+    121                }
+    122              }*/
+    123          // main state machine
+    124          //==============================================================================    
+    125              switch(main_state){
+   \                     ??main_0:
+   \   00003A   1F42....     MOV.W   &main_state, R15
+   \   00003E   0F83         SUB.W   #0x0, R15
+   \   000040   6024         JEQ     ??main_6
+   \   000042   1F83         SUB.W   #0x1, R15
+   \   000044   1724         JEQ     ??main_8
+   \   000046   1F83         SUB.W   #0x1, R15
+   \   000048   1824         JEQ     ??main_9
+   \   00004A   1F83         SUB.W   #0x1, R15
+   \   00004C   1924         JEQ     ??main_10
+   \   00004E   1F83         SUB.W   #0x1, R15
+   \   000050   3D24         JEQ     ??main_11
+   \   000052   1F83         SUB.W   #0x1, R15
+   \   000054   4D24         JEQ     ??main_12
+   \   000056   2F83         SUB.W   #0x2, R15
+   \   000058   0424         JEQ     ??main_13
+   \   00005A   3F800300     SUB.W   #0x3, R15
+   \   00005E   1724         JEQ     ??main_14
+   \   000060   503C         JMP     ??main_6
+    126              case HOLD:
+    127              break;
+    128              case START:
+    129                  if(current_IOT_char == '2'){
+   \                     ??main_13:
+   \   000062   F2903200.... CMP.B   #0x32, &current_IOT_char
+   \   000068   4C20         JNE     ??main_6
+    130                      main_state = GET_IP;
+   \   00006A   9243....     MOV.W   #0x1, &main_state
+    131                      new_IOT_char = FALSE;
+   \   00006E   8243....     MOV.W   #0x0, &new_IOT_char
+    132                  }
+    133                break;
+   \   000072   473C         JMP     ??main_6
+    134              case GET_IP:
+    135                get_ip();
+   \                     ??main_8:
+   \   000074   ........     CALLA   #get_ip
+    136                break;
+   \   000078   443C         JMP     ??main_6
+    137              case PROCESS_IP:
+    138                process_ip();
+   \                     ??main_9:
+   \   00007A   ........     CALLA   #process_ip
+    139                break;
+   \   00007E   413C         JMP     ??main_6
+    140              case DISPLAY_IP:
+    141                display_ip();
+   \                     ??main_10:
+   \   000080   ........     CALLA   #display_ip
+    142                Profile_Start = TRUE;
+   \   000084   9243....     MOV.W   #0x1, &Profile_Start
+    143                main_state = HOLD;
+   \   000088   8243....     MOV.W   #0x0, &main_state
+    144                break;
+   \   00008C   3A3C         JMP     ??main_6
+    145              case PING:
+    146                if(one_second_count >= ONE_SECOND){                 // ping google.com every second
+   \                     ??main_14:
+   \   00008E   B2901400.... CMP.W   #0x14, &one_second_count
+   \   000094   3628         JNC     ??main_6
+    147                  LED_blink = !LED_blink;
+   \   000096   8293....     CMP.W   #0x0, &LED_blink
+   \   00009A   0320         JNE     ??main_15
+   \   00009C   9243....     MOV.W   #0x1, &LED_blink
+   \   0000A0   023C         JMP     ??main_7
+   \                     ??main_15:
+   \   0000A2   8243....     MOV.W   #0x0, &LED_blink
+    148                  one_second_count = RESET_STATE;
+   \                     ??main_7:
+   \   0000A6   8243....     MOV.W   #0x0, &one_second_count
+    149                  send_command("AT+DNSLOOKUP=www.google.com\r\n");
+   \   0000AA   3C40....     MOV.W   #`?<Constant "AT+DNSLOOKUP=www.goog...">`, R12
+   \   0000AE   ........     CALLA   #send_command
+    150                  if(LED_blink)
+   \   0000B2   8293....     CMP.W   #0x0, &LED_blink
+   \   0000B6   0524         JEQ     ??main_16
+    151                    send_command("AT+DGPIO=30,1");
+   \   0000B8   3C40....     MOV.W   #`?<Constant "AT+DGPIO=30,1">`, R12
+   \   0000BC   ........     CALLA   #send_command
+   \   0000C0   203C         JMP     ??main_6
+    152                  else
+    153                    send_command("AT+DGPIO=30,0");
+   \                     ??main_16:
+   \   0000C2   3C40....     MOV.W   #`?<Constant "AT+DGPIO=30,0">`, R12
+   \   0000C6   ........     CALLA   #send_command
+    154                }
+    155                break;
+   \   0000CA   1B3C         JMP     ??main_6
+    156                
+    157              case BLACK_LINE:
+    158                  display_state = BLACK_LINE_DISPLAY;
+   \                     ??main_11:
+   \   0000CC   A243....     MOV.W   #0x2, &display_state
+    159                  if(Button_Two){                     // start when Button_Two presse
+   \   0000D0   8293....     CMP.W   #0x0, &Button_Two
+   \   0000D4   1624         JEQ     ??main_6
+    160                    clock_running = TRUE;             // flag to start timer
+   \   0000D6   9243....     MOV.W   #0x1, &clock_running
+    161                    if(!black_line_flag){             // search for line if not found
+   \   0000DA   8293....     CMP.W   #0x0, &black_line_flag
+   \   0000DE   0220         JNE     ??main_17
+    162                      searchForLine();
+   \   0000E0   ........     CALLA   #searchForLine
+    163                    }
+    164                    if(black_line_flag){              // when black_line_flag has been found
+   \                     ??main_17:
+   \   0000E4   8293....     CMP.W   #0x0, &black_line_flag
+   \   0000E8   0C24         JEQ     ??main_6
+    165                    LineFollowing();
+   \   0000EA   ........     CALLA   #LineFollowing
+    166                    }  
+    167                  }    
+    168                break;
+   \   0000EE   093C         JMP     ??main_6
+    169                
+    170              case CALIBRATING:
+    171                display_state = CALIBRATE;
+   \                     ??main_12:
+   \   0000F0   8243....     MOV.W   #0x0, &display_state
+    172                calibrate_sensors();
+   \   0000F4   ........     CALLA   #calibrate_sensors
+    173                if(calibrated){
+   \   0000F8   8293....     CMP.W   #0x0, &calibrated
+   \   0000FC   0224         JEQ     ??main_6
+    174                  main_state = BLACK_LINE;
+   \   0000FE   A242....     MOV.W   #0x4, &main_state
+    175                }
+    176                break;
+    177                
+    178              default: break;
+    179              }
+    180          //==============================================================================
+    181              main_display_process();
+   \                     ??main_6:
+   \   000102   ........     CALLA   #main_display_process
+    182              Display_Process();
+   \   000106   ........     CALLA   #Display_Process
+   \   00010A   973F         JMP     ??main_0
+   \   00010C   0343         NOP
+   \   00010E                REQUIRE _A_PM5CTL0_L
+    183              //wait_for_command();
+    184              //wheel_control();
+    185              //Serial_Display_Process();
+    186              //clock_process(); // update myTime
+    187              //Switches_Process(); //check switches
+    188            }
+    189          }
+
+   \                                 In  segment DATA16_ID, align 1, align-sorted
+   \                     `?<Initializer for one_time>`:
+   \   000000   01           DC8 1
+
+   \                                 In  segment DATA16_ID, align 2, align-sorted
+   \                     `?<Initializer for emitter_display_change>`:
+   \   000000   0100         DC16 1
+
+   \                                 In  segment DATA16_ID, align 2, align-sorted
+   \                     `?<Initializer for IOT_start>`:
+   \   000000   0100         DC16 1
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "AT+DNSLOOKUP=www.goog...">`:
+   \   000000   41542B444E53 DC8 "AT+DNSLOOKUP=www.google.com\015\012"
+   \            4C4F4F4B5550
+   \            3D7777772E67
+   \            6F6F676C652E
+   \            636F6D0D0A00
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "AT+DGPIO=30,1">`:
+   \   000000   41542B444750 DC8 "AT+DGPIO=30,1"
+   \            494F3D33302C
+   \            3100        
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "AT+DGPIO=30,0">`:
+   \   000000   41542B444750 DC8 "AT+DGPIO=30,0"
+   \            494F3D33302C
+   \            3000        
+    190          //------------------------------------------------------------------------------
+    191          
+    192              
+    193          
+    194              
+    195              
+    196              /*if(Profile_Start){                          // if flag is set send command
+    197                send_command("AT+NSTCP=50000,2\r");
+    198                Profile_Start = FALSE;
+    199              }*/
+    200          
+    201               /* if(one_second_count >= ONE_SECOND){
+    202                  ADC_conv = ~ADC_conv;
+    203                  if(ADC_conv){
+    204                      ADCIE |= ADCIE0;              // Enable ADC conv complete interrupt
+    205                  }else{
+    206                      ADCIE &= ~ADCIE0;              // Disable
+    207                  }
+    208                  one_second_count = BEGINNING;
+    209                }*/
+    210            
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   main
+        4   -> Display_Process
+        4   -> Init_ADC
+        4   -> Init_Chars
+        4   -> Init_Clocks
+        4   -> Init_Conditions
+        4   -> Init_LCD
+        4   -> Init_Ports
+        4   -> Init_Serial_UCA0
+        4   -> Init_Serial_UCA1
+        4   -> Init_Timers
+        4   -> Init_Wheels
+        4   -> LineFollowing
+        4   -> calibrate_sensors
+        4   -> display_ip
+        4   -> get_ip
+        4   -> main_display_process
+        4   -> process_ip
+        4   -> searchForLine
+        4   -> send_command
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      14  ?<Constant "AT+DGPIO=30,0">
+      14  ?<Constant "AT+DGPIO=30,1">
+      30  ?<Constant "AT+DNSLOOKUP=www.goog...">
+       2  ?<Initializer for IOT_start>
+       2  ?<Initializer for emitter_display_change>
+       1  ?<Initializer for one_time>
+       2  ADC_conv
+       2  ADC_enable_count
+       2  IOT_start
+       2  LED_blink
+       2  Profile_Start
+       2  _A_PM5CTL0_L
+       2  black_line_flag
+       2  buttonState
+       1  change
+       1  chosen_direction
+       2  clock_running
+       1  display_mode
+       2  emitter_display_change
+     270  main
+       2  main_state
+       2  main_wait_count
+       2  myTime
+       1  one_time
+       2  prevTime_Sequence
+       1  slow_input_down
+       2  test_value
+       2  wheel_state
+
+ 
+ 270 bytes in segment CODE
+   2 bytes in segment DATA16_AN
+  58 bytes in segment DATA16_C
+   5 bytes in segment DATA16_I
+   5 bytes in segment DATA16_ID
+  30 bytes in segment DATA16_Z
+ 
+ 270 bytes of CODE  memory
+  63 bytes of CONST memory
+  35 bytes of DATA  memory (+ 2 bytes shared)
+
+Errors: none
+Warnings: none

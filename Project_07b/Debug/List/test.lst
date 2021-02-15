@@ -1,0 +1,357 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           16/Apr/2020  11:08:59
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_09\test.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EW424.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_09\test.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_09\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_09\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_09\Debug\List\test.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_09\Debug\Obj\test.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_09\test.c
+      1          //==============================================================================
+      2          // Filename : test.c
+      3          //
+      4          // Description: This file contains test functions before they are moved to corresponding files        
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: March 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          #include "macros.h"
+     11          #include "msp430.h"
+     12          #include "functions.h"
+     13          #include <string.h>
+     14          // globals
+     15          extern int UCA0_index;
+     16          extern int UCA1_index;
+     17          extern char command_buf[MAX_STR_SIZE];
+     18          extern char transmit_char[LARGE_RING_SIZE];
+     19          extern volatile char command_ready;
+     20          extern unsigned int usb_rx_ring_rd;
+     21          extern volatile unsigned int usb_rx_ring_wr;
+     22          extern volatile unsigned int IOT_ring_wr;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     23          unsigned int IOT_ring_rd = BEGINNING;
+   \                     IOT_ring_rd:
+   \   000000                DS8 2
+     24          extern volatile char USB_Char_Rx[SMALL_RING_SIZE];
+     25          extern volatile char process_buf[LARGE_RING_SIZE];
+     26          extern char transmit_char[LARGE_RING_SIZE];
+     27          extern unsigned int IOT_state;
+     28          extern int process_index;
+     29          extern unsigned int command_output;
+     30          extern int UCA1_index;
+     31          extern volatile char IOT_out_ring[LARGE_RING_SIZE];
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     32          unsigned int IP_index = BEGINNING;
+   \                     IP_index:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     33          char IP_addr[IP_ADDRESS_SIZE];
+   \                     IP_addr:
+   \   000000                DS8 13
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     34          char IP_buffer[XLARGE_RING_SIZE];
+   \                     IP_buffer:
+   \   000000                DS8 64
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     35          int parse = FALSE;
+   \                     parse:
+   \   000000                DS8 2
+     36          
+
+   \                                 In  segment DATA16_I, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     37          char AT_NSTAT[] = {"AT+NSTAT=?\r"};
+   \                     AT_NSTAT:
+   \   000000                DS8 12
+   \   00000C                REQUIRE `?<Initializer for AT_NSTAT>`
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     38          char ip_one[10];
+   \                     ip_one:
+   \   000000                DS8 10
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     39          char ip_two[10];
+   \                     ip_two:
+   \   000000                DS8 10
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     40          char ip_three[4];
+   \                     ip_three:
+   \   000000                DS8 4
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     41          char ip_four[4];
+   \                     ip_four:
+   \   000000                DS8 4
+     42          
+     43          extern char display_line[numLines][strSize];
+     44          extern volatile unsigned char display_changed;
+     45          
+     46          extern volatile unsigned int main_state;
+     47          extern char current_IOT_char;
+     48          extern int new_IOT_char;
+     49          
+     50          //==============================================================================
+     51          
+     52          
+
+   \                                 In  segment CODE, align 2
+     53          void get_ip(void){
+   \                     get_ip:
+     54            
+     55              
+     56              if(new_IOT_char){
+   \   000000   8293....     CMP.W   #0x0, &new_IOT_char
+   \   000004   1724         JEQ     ??get_ip_0
+     57                
+     58                if(current_IOT_char >= 0x2E && current_IOT_char < 0x3A){    // is it a number?
+   \   000006   F2902E00.... CMP.B   #0x2e, &current_IOT_char
+   \   00000C   1128         JNC     ??get_ip_1
+   \   00000E   F2903A00.... CMP.B   #0x3a, &current_IOT_char
+   \   000014   0D2C         JC      ??get_ip_1
+     59                  IP_addr[IP_index++] = current_IOT_char;
+   \   000016   1F42....     MOV.W   &IP_index, R15
+   \   00001A   DF42........ MOV.B   &current_IOT_char, IP_addr(R15)
+   \   000020   9253....     ADD.W   #0x1, &IP_index
+     60                  if(IP_index >= (sizeof(IP_addr)))
+   \   000024   B2900D00.... CMP.W   #0xd, &IP_index
+   \   00002A   0228         JNC     ??get_ip_1
+     61                    main_state = PROCESS_IP;
+   \   00002C   A243....     MOV.W   #0x2, &main_state
+     62                }
+     63                new_IOT_char = FALSE;
+   \                     ??get_ip_1:
+   \   000030   8243....     MOV.W   #0x0, &new_IOT_char
+     64                
+     65              }
+     66              
+     67          }
+   \                     ??get_ip_0:
+   \   000034   1001         RETA
+     68          
+     69          
+
+   \                                 In  segment CODE, align 2
+     70          void display_ip(void){
+   \                     display_ip:
+     71            lcd_4line();
+   \   000000   ........     CALLA   #lcd_4line
+     72            
+     73            strcpy(display_line[line1], "IP address");
+   \   000004   3D40....     MOV.W   #`?<Constant "IP address">`, R13
+   \   000008   3C40....     MOV.W   #display_line, R12
+   \   00000C   ........     CALLA   #strcpy
+     74            update_string(display_line[line1], line1);
+   \   000010   0D43         MOV.W   #0x0, R13
+   \   000012   ........     CALLA   #update_string
+     75            
+     76            strcpy(display_line[line2], ip_one);
+   \   000016   3D40....     MOV.W   #ip_one, R13
+   \   00001A   3C40....     MOV.W   #display_line + 11, R12
+   \   00001E   ........     CALLA   #strcpy
+     77            update_string(display_line[line2], line2);
+   \   000022   1D43         MOV.W   #0x1, R13
+   \   000024   3C40....     MOV.W   #display_line + 11, R12
+   \   000028   ........     CALLA   #update_string
+     78            
+     79            strcpy(display_line[line3], ip_two);
+   \   00002C   3D40....     MOV.W   #ip_two, R13
+   \   000030   3C40....     MOV.W   #display_line + 22, R12
+   \   000034   ........     CALLA   #strcpy
+     80            update_string(display_line[line3], line3);
+   \   000038   2D43         MOV.W   #0x2, R13
+   \   00003A   3C40....     MOV.W   #display_line + 22, R12
+   \   00003E   ........     CALLA   #update_string
+     81            
+     82            display_changed = TRUE;
+   \   000042   D243....     MOV.B   #0x1, &display_changed
+     83          }
+   \   000046   1001         RETA
+     84          
+
+   \                                 In  segment CODE, align 2
+     85          void process_ip(void){
+   \                     process_ip:
+     86            int m = BEGINNING;
+   \   000000   0F43         MOV.W   #0x0, R15
+     87            int j = BEGINNING;
+   \   000002   0E43         MOV.W   #0x0, R14
+     88            for(int i = BEGINNING; i < (sizeof(IP_addr)); i++){
+   \   000004   0D43         MOV.W   #0x0, R13
+   \                     ??process_ip_0:
+   \   000006   3D900D00     CMP.W   #0xd, R13
+   \   00000A   1B2C         JC      ??process_ip_4
+     89              switch(m){
+   \   00000C   0C4F         MOV.W   R15, R12
+   \   00000E   0C83         SUB.W   #0x0, R12
+   \   000010   0324         JEQ     ??process_ip_5
+   \   000012   1C83         SUB.W   #0x1, R12
+   \   000014   0B24         JEQ     ??process_ip_6
+   \   000016   133C         JMP     ??process_ip_3
+     90              case 0:
+     91                ip_one[j++] = IP_addr[i];
+   \                     ??process_ip_5:
+   \   000018   DE4D........ MOV.B   IP_addr(R13), ip_one(R14)
+   \   00001E   1E53         ADD.W   #0x1, R14
+     92                if(j >= 10){
+   \   000020   3E900A00     CMP.W   #0xa, R14
+   \   000024   0C38         JL      ??process_ip_3
+     93                  j = BEGINNING;
+   \   000026   0E43         MOV.W   #0x0, R14
+     94                  m++;
+   \   000028   1F53         ADD.W   #0x1, R15
+     95                }
+     96                break;
+   \   00002A   093C         JMP     ??process_ip_3
+     97              case 1:
+     98                ip_two[j++] = IP_addr[i];
+   \                     ??process_ip_6:
+   \   00002C   DE4D........ MOV.B   IP_addr(R13), ip_two(R14)
+   \   000032   1E53         ADD.W   #0x1, R14
+     99                if(j >= 10){
+   \   000034   3E900A00     CMP.W   #0xa, R14
+   \   000038   0238         JL      ??process_ip_3
+    100                  j = BEGINNING;
+   \   00003A   0E43         MOV.W   #0x0, R14
+    101                  m++;
+   \   00003C   1F53         ADD.W   #0x1, R15
+    102                }
+    103                break;
+    104              default: break;
+    105              }
+    106            }
+   \                     ??process_ip_3:
+   \   00003E   1D53         ADD.W   #0x1, R13
+   \   000040   E23F         JMP     ??process_ip_0
+    107            main_state = DISPLAY_IP;
+   \                     ??process_ip_4:
+   \   000042   B2400300.... MOV.W   #0x3, &main_state
+    108          }
+   \   000048   1001         RETA
+
+   \                                 In  segment DATA16_ID, align 1, align-sorted
+   \                     `?<Initializer for AT_NSTAT>`:
+   \   000000   41542B4E5354 DC8 "AT+NSTAT=?\015"
+   \            41543D3F0D00
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "IP address">`:
+   \   000000   495020616464 DC8 "IP address"
+   \            7265737300  
+    109          
+    110          //this code can replace the code in interrupt_serial for termite use
+    111          /*#pragma vector = EUSCI_A1_VECTOR
+    112          __interrupt void eUSCI_A1_ISR(void){           
+    113            switch(__even_in_range(UCA1IV, 0x08)){         // Vector 0 - no interrupt
+    114            case NO_INTERRUPT:    
+    115              break;
+    116            case RXIFG:                                       // Vector 2 - RXIFG, characters coming from the PC to FRAM
+    117              PC_receive_char = UCA1RXBUF;                   // Rx -> receive char character
+    118                  
+    119                if(PC_receive_char == '/'){
+    120                  FRAM_Command = TRUE;                      // checks to see if it is a command
+    121                }
+    122                if(FRAM_Command){                           // if command put char into ring buffer
+    123                  temp = usb_rx_ring_wr++;
+    124                  USB_Char_Rx[temp] = PC_receive_char;
+    125                  if(usb_rx_ring_wr >= (sizeof(USB_Char_Rx))){
+    126                    usb_rx_ring_wr = BEGINNING;             // circular buffer
+    127                    serial_state = RECEIVE;
+    128                  }
+    129                }else{                                      // if not command send to UCA0TXBUF
+    130                  UCA0TXBUF = PC_receive_char;
+    131                  UCA1IE |= UCTXIE;
+    132                }
+    133                if(PC_receive_char == ASCII_CR && FRAM_Command){
+    134                  FRAM_Command = FALSE;                     // command finished, stop putting characters in ring buffer
+    135                  IOT_state = PROCESS;                      // put IOT in process state
+    136                }
+    137                   
+    138              break;*/
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   display_ip
+        4   -> lcd_4line
+        4   -> strcpy
+        4   -> update_string
+      4   get_ip
+      4   process_ip
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      11  ?<Constant "IP address">
+      12  ?<Initializer for AT_NSTAT>
+      12  AT_NSTAT
+       2  IOT_ring_rd
+      13  IP_addr
+      64  IP_buffer
+       2  IP_index
+      72  display_ip
+      54  get_ip
+       4  ip_four
+      10  ip_one
+       4  ip_three
+      10  ip_two
+       2  parse
+      74  process_ip
+
+ 
+ 200 bytes in segment CODE
+  11 bytes in segment DATA16_C
+  12 bytes in segment DATA16_I
+  12 bytes in segment DATA16_ID
+ 111 bytes in segment DATA16_Z
+ 
+ 200 bytes of CODE  memory
+  23 bytes of CONST memory
+ 123 bytes of DATA  memory
+
+Errors: none
+Warnings: none

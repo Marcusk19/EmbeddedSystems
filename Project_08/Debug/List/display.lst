@@ -1,0 +1,356 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           29/Mar/2020  17:05:42
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_08\display.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWDC9B.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_08\display.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_08\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_08\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_08\Debug\List\display.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_08\Debug\Obj\display.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_08\display.c
+      1          //==============================================================================
+      2          // Filename : display.c
+      3          // Description: This file contains the functions display proccesses
+      4          // 
+      5          // Author: Marcus Kok
+      6          // Date: March 2020
+      7          // Compiler: Made with IAR Embedded Workbench for MSP430 7.12.4
+      8          //==============================================================================
+      9          
+     10          #include  "functions.h"
+     11          #include  "msp430.h"
+     12          #include "macros.h"
+     13          #include <string.h>
+     14          
+     15          // globals
+     16          extern unsigned int buttonState;
+     17          extern char display_line[numLines][strSize];
+     18          extern unsigned int num_presses;
+     19          extern volatile unsigned char display_changed;
+     20          extern char display_line[numLines][strSize];
+     21          extern volatile unsigned char update_display;
+     22          extern unsigned int emitter_flag;
+     23          extern int display_state;
+     24          extern volatile char process_buf[LARGE_RING_SIZE];
+     25          extern char receive_char[MAX_STR_SIZE];
+     26          extern char test_command[NCSU_SIZE];
+     27          extern char transmit_char[MAX_STR_SIZE];
+     28          extern int serial_mode;
+     29          //------------------------------------------------------------------------------
+     30          
+
+   \                                 In  segment CODE, align 2
+     31          void Serial_Display_Process(void){
+   \                     Serial_Display_Process:
+     32            
+     33            switch(serial_mode){
+   \   000000   1F42....     MOV.W   &serial_mode, R15
+   \   000004   0F83         SUB.W   #0x0, R15
+   \   000006   0524         JEQ     ??Serial_Display_Process_1
+   \   000008   1F83         SUB.W   #0x1, R15
+   \   00000A   3124         JEQ     ??Serial_Display_Process_2
+   \   00000C   1F83         SUB.W   #0x1, R15
+   \   00000E   0F24         JEQ     ??Serial_Display_Process_3
+   \   000010   4C3C         JMP     ??Serial_Display_Process_0
+     34            case WAIT:
+     35              strcpy(display_line[line1], "  Waiting ");
+   \                     ??Serial_Display_Process_1:
+   \   000012   3D40....     MOV.W   #`?<Constant "  Waiting ">`, R13
+   \   000016   3C40....     MOV.W   #display_line, R12
+   \   00001A   ........     CALLA   #strcpy
+     36              update_string(display_line[line1], line1);
+   \   00001E   0D43         MOV.W   #0x0, R13
+   \   000020   ........     CALLA   #update_string
+     37              enable_display_update();
+   \   000024   ........     CALLA   #enable_display_update
+     38              display_changed = TRUE;
+   \   000028   D243....     MOV.B   #0x1, &display_changed
+     39              break;
+   \   00002C   3E3C         JMP     ??Serial_Display_Process_0
+     40            case RECEIVED:                                // put received information on line 4
+     41              clear_line2();                              // clear transmit info
+   \                     ??Serial_Display_Process_3:
+   \   00002E   ........     CALLA   #clear_line2
+     42              
+     43              strcpy(display_line[line1], " Received ");
+   \   000032   3D40....     MOV.W   #`?<Constant " Received ">`, R13
+   \   000036   3C40....     MOV.W   #display_line, R12
+   \   00003A   ........     CALLA   #strcpy
+     44              update_string(display_line[line1], line1);
+   \   00003E   0D43         MOV.W   #0x0, R13
+   \   000040   ........     CALLA   #update_string
+     45              enable_display_update();
+   \   000044   ........     CALLA   #enable_display_update
+     46              display_changed = TRUE;
+   \   000048   D243....     MOV.B   #0x1, &display_changed
+     47              
+     48              strcpy(display_line[line4], receive_char);        // update display
+   \   00004C   3D40....     MOV.W   #receive_char, R13
+   \   000050   3C40....     MOV.W   #display_line + 33, R12
+   \   000054   ........     CALLA   #strcpy
+     49              update_string(display_line[line4], line4);              
+   \   000058   3D400300     MOV.W   #0x3, R13
+   \   00005C   3C40....     MOV.W   #display_line + 33, R12
+   \   000060   ........     CALLA   #update_string
+     50              enable_display_update();
+   \   000064   ........     CALLA   #enable_display_update
+     51              display_changed = TRUE;
+   \   000068   D243....     MOV.B   #0x1, &display_changed
+     52              break;
+   \   00006C   1E3C         JMP     ??Serial_Display_Process_0
+     53            case TRANSMITTING:
+     54              clear_line4();                              // clear receive info
+   \                     ??Serial_Display_Process_2:
+   \   00006E   ........     CALLA   #clear_line4
+     55              
+     56              strcpy(display_line[line1], " Transmit ");
+   \   000072   3D40....     MOV.W   #`?<Constant " Transmit ">`, R13
+   \   000076   3C40....     MOV.W   #display_line, R12
+   \   00007A   ........     CALLA   #strcpy
+     57              update_string(display_line[line1], line1);
+   \   00007E   0D43         MOV.W   #0x0, R13
+   \   000080   ........     CALLA   #update_string
+     58              enable_display_update();
+   \   000084   ........     CALLA   #enable_display_update
+     59              display_changed = TRUE;
+   \   000088   D243....     MOV.B   #0x1, &display_changed
+     60              
+     61              strcpy(display_line[line2], transmit_char);
+   \   00008C   3D40....     MOV.W   #transmit_char, R13
+   \   000090   3C40....     MOV.W   #display_line + 11, R12
+   \   000094   ........     CALLA   #strcpy
+     62              update_string(display_line[line2], line2);
+   \   000098   1D43         MOV.W   #0x1, R13
+   \   00009A   3C40....     MOV.W   #display_line + 11, R12
+   \   00009E   ........     CALLA   #update_string
+     63              enable_display_update();
+   \   0000A2   ........     CALLA   #enable_display_update
+     64              display_changed = TRUE;
+   \   0000A6   D243....     MOV.B   #0x1, &display_changed
+     65              break;
+     66              
+     67            default: break;
+     68            }
+     69            if(display_state == TOGGLE_ONE){
+   \                     ??Serial_Display_Process_0:
+   \   0000AA   9293....     CMP.W   #0x1, &display_state
+   \   0000AE   0F20         JNE     ??Serial_Display_Process_4
+     70              strcpy(display_line[line3], "  460800  ");
+   \   0000B0   3D40....     MOV.W   #`?<Constant "  460800  ">`, R13
+   \   0000B4   3C40....     MOV.W   #display_line + 22, R12
+   \   0000B8   ........     CALLA   #strcpy
+     71              update_string(display_line[line3], line3);
+   \   0000BC   2D43         MOV.W   #0x2, R13
+   \   0000BE   3C40....     MOV.W   #display_line + 22, R12
+   \   0000C2   ........     CALLA   #update_string
+     72              enable_display_update();
+   \   0000C6   ........     CALLA   #enable_display_update
+     73              display_changed = TRUE;
+   \   0000CA   D243....     MOV.B   #0x1, &display_changed
+     74            }
+     75            
+     76            if(display_state == TOGGLE_TWO){
+   \                     ??Serial_Display_Process_4:
+   \   0000CE   A293....     CMP.W   #0x2, &display_state
+   \   0000D2   0F20         JNE     ??Serial_Display_Process_5
+     77              strcpy(display_line[line3], "  115200  ");
+   \   0000D4   3D40....     MOV.W   #`?<Constant "  115200  ">`, R13
+   \   0000D8   3C40....     MOV.W   #display_line + 22, R12
+   \   0000DC   ........     CALLA   #strcpy
+     78              update_string(display_line[line3], line3);
+   \   0000E0   2D43         MOV.W   #0x2, R13
+   \   0000E2   3C40....     MOV.W   #display_line + 22, R12
+   \   0000E6   ........     CALLA   #update_string
+     79              enable_display_update();
+   \   0000EA   ........     CALLA   #enable_display_update
+     80              display_changed = TRUE;
+   \   0000EE   D243....     MOV.B   #0x1, &display_changed
+     81            }
+     82            
+     83          }
+   \                     ??Serial_Display_Process_5:
+   \   0000F2   1001         RETA
+     84          
+
+   \                                 In  segment CODE, align 2
+     85          void clear_LCD(void){
+   \                     clear_LCD:
+     86            strcpy(display_line[line1], "          ");
+   \   000000   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   000004   3C40....     MOV.W   #display_line, R12
+   \   000008   ........     CALLA   #strcpy
+     87            update_string(display_line[line1], line1);
+   \   00000C   0D43         MOV.W   #0x0, R13
+   \   00000E   ........     CALLA   #update_string
+     88            strcpy(display_line[line2], "          ");
+   \   000012   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   000016   3C40....     MOV.W   #display_line + 11, R12
+   \   00001A   ........     CALLA   #strcpy
+     89            update_string(display_line[line2], line2);
+   \   00001E   1D43         MOV.W   #0x1, R13
+   \   000020   3C40....     MOV.W   #display_line + 11, R12
+   \   000024   ........     CALLA   #update_string
+     90            strcpy(display_line[line3], "          ");
+   \   000028   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   00002C   3C40....     MOV.W   #display_line + 22, R12
+   \   000030   ........     CALLA   #strcpy
+     91            update_string(display_line[line3], line3);
+   \   000034   2D43         MOV.W   #0x2, R13
+   \   000036   3C40....     MOV.W   #display_line + 22, R12
+   \   00003A   ........     CALLA   #update_string
+     92            strcpy(display_line[line4], "          ");
+   \   00003E   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   000042   3C40....     MOV.W   #display_line + 33, R12
+   \   000046   ........     CALLA   #strcpy
+     93            update_string(display_line[line4], line4);
+   \   00004A   3D400300     MOV.W   #0x3, R13
+   \   00004E   3C40....     MOV.W   #display_line + 33, R12
+   \   000052   ........     CALLA   #update_string
+     94            enable_display_update();
+   \   000056   ........     CALLA   #enable_display_update
+     95            display_changed = TRUE;
+   \   00005A   D243....     MOV.B   #0x1, &display_changed
+     96          }
+   \   00005E   1001         RETA
+     97          
+
+   \                                 In  segment CODE, align 2
+     98          void clear_line4(void){
+   \                     clear_line4:
+     99            strcpy(display_line[line4], "          ");
+   \   000000   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   000004   3C40....     MOV.W   #display_line + 33, R12
+   \   000008   ........     CALLA   #strcpy
+    100            update_string(display_line[line4], line4);
+   \   00000C   3D400300     MOV.W   #0x3, R13
+   \   000010   3C40....     MOV.W   #display_line + 33, R12
+   \   000014   ........     CALLA   #update_string
+    101            enable_display_update();
+   \   000018   ........     CALLA   #enable_display_update
+    102            display_changed = TRUE;
+   \   00001C   D243....     MOV.B   #0x1, &display_changed
+    103          }
+   \   000020   1001         RETA
+    104          
+
+   \                                 In  segment CODE, align 2
+    105          void clear_line2(void){
+   \                     clear_line2:
+    106            strcpy(display_line[line2], "          ");
+   \   000000   3D40....     MOV.W   #`?<Constant "          ">`, R13
+   \   000004   3C40....     MOV.W   #display_line + 11, R12
+   \   000008   ........     CALLA   #strcpy
+    107            update_string(display_line[line2], line2);
+   \   00000C   1D43         MOV.W   #0x1, R13
+   \   00000E   3C40....     MOV.W   #display_line + 11, R12
+   \   000012   ........     CALLA   #update_string
+    108            enable_display_update();
+   \   000016   ........     CALLA   #enable_display_update
+    109            display_changed = TRUE;
+   \   00001A   D243....     MOV.B   #0x1, &display_changed
+    110          }
+   \   00001E   1001         RETA
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Waiting ">`:
+   \   000000   202057616974 DC8 "  Waiting "
+   \            696E672000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " Received ">`:
+   \   000000   205265636569 DC8 " Received "
+   \            7665642000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " Transmit ">`:
+   \   000000   205472616E73 DC8 " Transmit "
+   \            6D69742000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  460800  ">`:
+   \   000000   202034363038 DC8 "  460800  "
+   \            3030202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  115200  ">`:
+   \   000000   202031313532 DC8 "  115200  "
+   \            3030202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "          ">`:
+   \   000000   202020202020 DC8 "          "
+   \            2020202000  
+    111            
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   Serial_Display_Process
+        4   -> clear_line2
+        4   -> clear_line4
+        4   -> enable_display_update
+        4   -> strcpy
+        4   -> update_string
+      4   clear_LCD
+        4   -> enable_display_update
+        4   -> strcpy
+        4   -> update_string
+      4   clear_line2
+        4   -> enable_display_update
+        4   -> strcpy
+        4   -> update_string
+      4   clear_line4
+        4   -> enable_display_update
+        4   -> strcpy
+        4   -> update_string
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      11  ?<Constant "          ">
+      11  ?<Constant "  115200  ">
+      11  ?<Constant "  460800  ">
+      11  ?<Constant "  Waiting ">
+      11  ?<Constant " Received ">
+      11  ?<Constant " Transmit ">
+     244  Serial_Display_Process
+      96  clear_LCD
+      32  clear_line2
+      34  clear_line4
+
+ 
+ 406 bytes in segment CODE
+  66 bytes in segment DATA16_C
+ 
+ 406 bytes of CODE  memory
+  66 bytes of CONST memory
+
+Errors: none
+Warnings: none

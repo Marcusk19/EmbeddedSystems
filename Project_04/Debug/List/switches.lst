@@ -1,0 +1,158 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           10/Feb/2020  19:23:12
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_04\switches.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EW8414.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_04\switches.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_04\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_04\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_04\Debug\List\switches.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_04\Debug\Obj\switches.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_04\switches.c
+      1          //==============================================================================
+      2          // Filename : switches.c
+      3          // Description: This file contains the functions for switches on the fram board
+      4          // 
+      5          // Author: Marcus Kok
+      6          // Date: January 2020
+      7          // Compiler: Made with IAR Embedded Workbench for MSP430 7.12.4
+      8          //==============================================================================
+      9          
+     10          #include  "functions.h"
+     11          #include  "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x200
+   \   union <unnamed> _A_PAIN_L
+   \                     _A_PAIN_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x220
+   \   union <unnamed> _A_PBIN_L
+   \                     _A_PBIN_L:
+   \   000000                DS8 2
+     12          #include "macros.h"
+     13          #include <string.h>
+     14          
+     15          extern unsigned int buttonPress;
+     16          extern char display_line[numLines][strSize];
+     17          extern unsigned int num_presses;
+     18          
+     19          
+
+   \                                 In  segment CODE, align 2
+     20          void Switches_Process(void){
+   \                     Switches_Process:
+     21            
+     22            //Switch 1
+     23            if(!(P4IN &= SW1)){
+   \   000000   5E422102     MOV.B   &0x221, R14
+   \   000004   6EF3         AND.B   #0x2, R14
+   \   000006   C24E2102     MOV.B   R14, &0x221
+   \   00000A   4E93         CMP.B   #0x0, R14
+   \   00000C   0220         JNE     ??Switches_Process_0
+     24              buttonPress = FIGURE_EIGHT;
+   \   00000E   A243....     MOV.W   #0x2, &buttonPress
+     25            }
+     26            
+     27             if(!(P2IN &= SW2)){
+   \                     ??Switches_Process_0:
+   \   000012   5E420102     MOV.B   &0x201, R14
+   \   000016   7EF2         AND.B   #0x8, R14
+   \   000018   C24E0102     MOV.B   R14, &0x201
+   \   00001C   4E93         CMP.B   #0x0, R14
+   \   00001E   0320         JNE     ??Switches_Process_1
+     28             buttonPress = TRIANGLE;
+   \   000020   B2400300.... MOV.W   #0x3, &buttonPress
+     29             }
+     30              displayShapes(); 
+   \                     ??Switches_Process_1:
+   \   000026   ........     CALLA   #displayShapes
+     31              runShapes();
+   \   00002A   ........     BRA     #runShapes
+   \   00002E                REQUIRE _A_PBIN_L
+   \   00002E                REQUIRE _A_PAIN_L
+     32            //Switch 2
+     33          }
+     34          
+     35          //not used =====================================================================
+     36          
+     37            /*switch(num_presses){
+     38              case CIRCLE: 
+     39                buttonPress = CIRCLE;
+     40                break;
+     41              case FIGURE_EIGHT:
+     42                buttonPress = FIGURE_EIGHT;
+     43                break;
+     44              case TRIANGLE: 
+     45                buttonPress = TRIANGLE;
+     46                break;
+     47              case NUM_SHAPES:
+     48                num_presses = RESET_STATE;
+     49                buttonPress = HOLD;
+     50                break;
+     51              default:
+     52                break;
+     53              }*/
+     54              /*if(num_presses == CIRCLE){
+     55                buttonPress = CIRCLE;
+     56              }
+     57              if(num_presses == FIGURE_EIGHT){
+     58                buttonPress = FIGURE_EIGHT;
+     59              }
+     60              if(num_presses == TRIANGLE){
+     61                buttonPress = TRIANGLE;
+     62              }
+     63              if(num_presses >= NUM_SHAPES){
+     64                num_presses = RESET_STATE;
+     65              }*/
+     66          
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   Switches_Process
+        4   -> displayShapes
+        0   -> runShapes
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      46  Switches_Process
+       2  _A_PAIN_L
+       2  _A_PBIN_L
+
+ 
+ 46 bytes in segment CODE
+  4 bytes in segment DATA16_AN
+ 
+ 46 bytes of CODE memory
+  0 bytes of DATA memory (+ 4 bytes shared)
+
+Errors: none
+Warnings: none

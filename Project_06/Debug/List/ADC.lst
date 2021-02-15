@@ -1,0 +1,336 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           02/Mar/2020  14:38:43
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Project_06\ADC.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EW1853.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_06\ADC.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_06\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_06\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_06\Debug\List\ADC.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_06\Debug\Obj\ADC.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_06\ADC.c
+      1          //==============================================================================
+      2          // Filename : ADC.c
+      3          //
+      4          // Description: This file contains functions for analog to digital
+      5          // converter
+      6          //
+      7          // Author: Marcus Kok
+      8          // Date: February 2020
+      9          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+     10          //==============================================================================
+     11          
+     12          #include "macros.h"
+     13          #include "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x222
+   \   union <unnamed> _A_PBOUT_L
+   \                     _A_PBOUT_L:
+   \   000000                DS8 2
+     14          #include "functions.h"
+     15          #include <string.h>
+     16          
+     17          //--------------------------- globals ------------------------------------------
+
+   \                                 In  segment DATA16_Z, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     18          char adc_char[ADC_NUM_DIGITS];
+   \                     adc_char:
+   \   000000                DS8 5
+
+   \                                 In  segment DATA16_I, align 1, align-sorted
+   \   000000                REQUIRE ?cstart_init_copy
+     19          char display_Buffer[] = "      ";
+   \                     display_Buffer:
+   \   000000                DS8 7
+   \   000007                REQUIRE `?<Initializer for display_Buffer>`
+     20          extern volatile unsigned char display_changed;
+     21          extern char display_line[numLines][strSize];
+     22          //------------------------------------------------------------------------------
+     23          
+     24          
+     25          // hex to BCD conversion
+     26          
+
+   \                                 In  segment CODE, align 2
+     27          void HEXtoBCD(int hex_value){
+   \                     HEXtoBCD:
+     28            int value;
+     29            adc_char[BCD_THOUSAND] = '0';
+   \   000000   F2403000.... MOV.B   #0x30, &adc_char
+     30            while(hex_value > THOUSANDS){
+   \                     ??HEXtoBCD_0:
+   \   000006   3C90E803     CMP.W   #0x3e8, R12
+   \   00000A   0C38         JL      ??HEXtoBCD_3
+     31              hex_value = hex_value - THOUSAND_DIV;
+   \   00000C   3C5018FC     ADD.W   #0xfc18, R12
+     32              value++;
+   \   000010   1F53         ADD.W   #0x1, R15
+     33              adc_char[BCD_THOUSAND] = ASCII_CONV + value;
+   \   000012   0E12         PUSH.W  R14
+   \   000014   C14F0000     MOV.B   R15, 0(SP)
+   \   000018   3E41         POP.W   R14
+   \   00001A   7E503000     ADD.B   #0x30, R14
+   \   00001E   C24E....     MOV.B   R14, &adc_char
+   \   000022   F13F         JMP     ??HEXtoBCD_0
+     34            }
+     35            value = RESET_STATE;
+   \                     ??HEXtoBCD_3:
+   \   000024   0F43         MOV.W   #0x0, R15
+     36            adc_char[BCD_HUNDRED] = '0';
+   \   000026   F2403000.... MOV.B   #0x30, &adc_char + 1
+     37            while(hex_value > HUNDREDS){
+   \                     ??HEXtoBCD_1:
+   \   00002C   3C906400     CMP.W   #0x64, R12
+   \   000030   0C38         JL      ??HEXtoBCD_4
+     38              hex_value = hex_value - HUNDRED_DIV;
+   \   000032   3C509CFF     ADD.W   #0xff9c, R12
+     39              value++;
+   \   000036   1F53         ADD.W   #0x1, R15
+     40              adc_char[BCD_HUNDRED] = ASCII_CONV + value;
+   \   000038   0E12         PUSH.W  R14
+   \   00003A   C14F0000     MOV.B   R15, 0(SP)
+   \   00003E   3E41         POP.W   R14
+   \   000040   7E503000     ADD.B   #0x30, R14
+   \   000044   C24E....     MOV.B   R14, &adc_char + 1
+   \   000048   F13F         JMP     ??HEXtoBCD_1
+     41            }
+     42            value = RESET_STATE;
+   \                     ??HEXtoBCD_4:
+   \   00004A   0F43         MOV.W   #0x0, R15
+     43            adc_char[BCD_TEN] = '0';
+   \   00004C   F2403000.... MOV.B   #0x30, &adc_char + 2
+     44            while(hex_value > TENS){
+   \                     ??HEXtoBCD_2:
+   \   000052   3C900A00     CMP.W   #0xa, R12
+   \   000056   0C38         JL      ??HEXtoBCD_5
+     45              hex_value = hex_value - TEN_DIV;
+   \   000058   3C50F6FF     ADD.W   #0xfff6, R12
+     46              value++;
+   \   00005C   1F53         ADD.W   #0x1, R15
+     47              adc_char[BCD_TEN] = ASCII_CONV + value;
+   \   00005E   0E12         PUSH.W  R14
+   \   000060   C14F0000     MOV.B   R15, 0(SP)
+   \   000064   3E41         POP.W   R14
+   \   000066   7E503000     ADD.B   #0x30, R14
+   \   00006A   C24E....     MOV.B   R14, &adc_char + 2
+   \   00006E   F13F         JMP     ??HEXtoBCD_2
+     48            }
+     49            adc_char[BCD_ONE] = '0';
+   \                     ??HEXtoBCD_5:
+   \   000070   F2403000.... MOV.B   #0x30, &adc_char + 3
+     50            adc_char[BCD_ONE] = ASCII_CONV + hex_value;
+   \   000076   0E12         PUSH.W  R14
+   \   000078   C14C0000     MOV.B   R12, 0(SP)
+   \   00007C   3E41         POP.W   R14
+   \   00007E   7E503000     ADD.B   #0x30, R14
+   \   000082   C24E....     MOV.B   R14, &adc_char + 3
+     51            adc_char[NULL_TERMINATOR] = '\0';
+   \   000086   C243....     MOV.B   #0x0, &adc_char + 4
+     52          }
+   \   00008A   1001         RETA
+     53          
+
+   \                                 In  segment CODE, align 2
+     54          void adc_line4(int position){                   // print adc value to 4th line
+   \                     adc_line4:
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0A4C         MOV.W   R12, R10
+     55              strcat(adc_char, display_Buffer);
+   \   000004   3D40....     MOV.W   #display_Buffer, R13
+   \   000008   3C40....     MOV.W   #adc_char, R12
+   \   00000C   ........     CALLA   #strcat
+     56              strcpy(display_line[line4], adc_char);      // update display
+   \   000010   0D4C         MOV.W   R12, R13
+   \   000012   3C40....     MOV.W   #display_line + 33, R12
+   \   000016   ........     CALLA   #strcpy
+     57              update_string(display_line[line4], line4);
+   \   00001A   3D400300     MOV.W   #0x3, R13
+   \   00001E   3C40....     MOV.W   #display_line + 33, R12
+   \   000022   ........     CALLA   #update_string
+     58              enable_display_update();
+   \   000026   ........     CALLA   #enable_display_update
+     59              display_changed = TRUE;
+   \   00002A   D243....     MOV.B   #0x1, &display_changed
+     60              
+     61              //clear_adc_char();                          // reset adc_char
+     62          }
+   \   00002E   3A41         POP.W   R10
+   \   000030   1001         RETA
+     63          
+
+   \                                 In  segment CODE, align 2
+     64          void adc_line2(int position){                   // print adc value to 2nd line
+   \                     adc_line2:
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0A4C         MOV.W   R12, R10
+     65            strcat(adc_char, display_Buffer);
+   \   000004   3D40....     MOV.W   #display_Buffer, R13
+   \   000008   3C40....     MOV.W   #adc_char, R12
+   \   00000C   ........     CALLA   #strcat
+     66            strcpy(display_line[line2], adc_char);        // update display
+   \   000010   0D4C         MOV.W   R12, R13
+   \   000012   3C40....     MOV.W   #display_line + 11, R12
+   \   000016   ........     CALLA   #strcpy
+     67            update_string(display_line[line2], line2);
+   \   00001A   1D43         MOV.W   #0x1, R13
+   \   00001C   3C40....     MOV.W   #display_line + 11, R12
+   \   000020   ........     CALLA   #update_string
+     68            enable_display_update();
+   \   000024   ........     CALLA   #enable_display_update
+     69            display_changed = TRUE;
+   \   000028   D243....     MOV.B   #0x1, &display_changed
+     70            
+     71            //clear_adc_char();                            // reset adc_char
+     72          }
+   \   00002C   3A41         POP.W   R10
+   \   00002E   1001         RETA
+     73          
+
+   \                                 In  segment CODE, align 2
+     74          void adc_line3(int position){                   // print adc value to 3rd line
+   \                     adc_line3:
+   \   000000   0A12         PUSH.W  R10
+   \   000002   0A4C         MOV.W   R12, R10
+     75            strcat(adc_char, display_Buffer);
+   \   000004   3D40....     MOV.W   #display_Buffer, R13
+   \   000008   3C40....     MOV.W   #adc_char, R12
+   \   00000C   ........     CALLA   #strcat
+     76            strcpy(display_line[line3], adc_char);        // update display
+   \   000010   0D4C         MOV.W   R12, R13
+   \   000012   3C40....     MOV.W   #display_line + 22, R12
+   \   000016   ........     CALLA   #strcpy
+     77            update_string(display_line[line3], line3);
+   \   00001A   2D43         MOV.W   #0x2, R13
+   \   00001C   3C40....     MOV.W   #display_line + 22, R12
+   \   000020   ........     CALLA   #update_string
+     78            enable_display_update();
+   \   000024   ........     CALLA   #enable_display_update
+     79            display_changed = TRUE;
+   \   000028   D243....     MOV.B   #0x1, &display_changed
+     80          }
+   \   00002C   3A41         POP.W   R10
+   \   00002E   1001         RETA
+     81          
+
+   \                                 In  segment CODE, align 2
+     82          void emitter_Off(void){
+   \                     emitter_Off:
+     83            P3OUT &= ~IR_LED;                             // turn emitter off
+   \   000000   F2C020002202 BIC.B   #0x20, &0x222
+     84          }
+   \   000006   1001         RETA
+   \   000008                REQUIRE _A_PBOUT_L
+     85          
+
+   \                                 In  segment CODE, align 2
+     86          void emitter_On(void){                          // turne emitter on
+   \                     emitter_On:
+     87            P3OUT |= IR_LED;
+   \   000000   F2D020002202 BIS.B   #0x20, &0x222
+     88          }
+   \   000006   1001         RETA
+   \   000008                REQUIRE _A_PBOUT_L
+     89          
+
+   \                                 In  segment CODE, align 2
+     90          void clear_adc_char(void){
+   \                     clear_adc_char:
+     91            for(int i = RESET_STATE; i < ADC_NUM_DIGITS; i++){
+   \   000000   0F43         MOV.W   #0x0, R15
+   \                     ??clear_adc_char_0:
+   \   000002   3F900500     CMP.W   #0x5, R15
+   \   000006   0534         JGE     ??clear_adc_char_1
+     92              adc_char[i] = '0';
+   \   000008   FF403000.... MOV.B   #0x30, adc_char(R15)
+     93            }
+   \   00000E   1F53         ADD.W   #0x1, R15
+   \   000010   F83F         JMP     ??clear_adc_char_0
+     94          }
+   \                     ??clear_adc_char_1:
+   \   000012   1001         RETA
+
+   \                                 In  segment DATA16_ID, align 1, align-sorted
+   \                     `?<Initializer for display_Buffer>`:
+   \   000000   202020202020 DC8 "      "
+   \            00          
+     95            
+     96            
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      6   HEXtoBCD
+      6   adc_line2
+        6   -> enable_display_update
+        6   -> strcat
+        6   -> strcpy
+        6   -> update_string
+      6   adc_line3
+        6   -> enable_display_update
+        6   -> strcat
+        6   -> strcpy
+        6   -> update_string
+      6   adc_line4
+        6   -> enable_display_update
+        6   -> strcat
+        6   -> strcpy
+        6   -> update_string
+      4   clear_adc_char
+      4   emitter_Off
+      4   emitter_On
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       7  ?<Initializer for display_Buffer>
+     140  HEXtoBCD
+       2  _A_PBOUT_L
+       5  adc_char
+      48  adc_line2
+      48  adc_line3
+      50  adc_line4
+      20  clear_adc_char
+       7  display_Buffer
+       8  emitter_Off
+       8  emitter_On
+
+ 
+ 322 bytes in segment CODE
+   2 bytes in segment DATA16_AN
+   7 bytes in segment DATA16_I
+   7 bytes in segment DATA16_ID
+   5 bytes in segment DATA16_Z
+ 
+ 322 bytes of CODE  memory
+   7 bytes of CONST memory
+  12 bytes of DATA  memory (+ 2 bytes shared)
+
+Errors: none
+Warnings: none

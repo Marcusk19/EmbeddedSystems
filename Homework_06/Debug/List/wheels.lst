@@ -1,0 +1,304 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           13/Feb/2020  22:10:47
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  C:\Users\platy\Desktop\ECE-306_Code\Homework_05\wheels.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EWF463.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Homework_05\wheels.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_05\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_05\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_05\Debug\List\wheels.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Homework_05\Debug\Obj\wheels.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Homework_05\wheels.c
+      1          //==============================================================================
+      2          // Filename : wheels.c
+      3          //
+      4          // Description: This file contains the functions for the wheels 
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: February 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          
+     11          #include  "functions.h"
+     12          #include  "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x242
+   \   union <unnamed> _A_PCOUT_L
+   \                     _A_PCOUT_L:
+   \   000000                DS8 2
+     13          #include "macros.h"
+     14          
+     15          //GLOBALS=======================================================================
+     16          extern unsigned int myTime;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     17          int waitCount = RESET_STATE;
+   \                     waitCount:
+   \   000000                DS8 2
+     18          extern unsigned int prevButton;
+     19          extern unsigned int buttonPress;
+     20          extern int wheelCount;
+     21          //==============================================================================
+     22          
+
+   \                                 In  segment CODE, align 2
+     23          void turnOnRight(void){
+   \                     turnOnRight:
+     24            P6OUT |= R_FORWARD;
+   \   000000   D2D34302     BIS.B   #0x1, &0x243
+     25          }
+   \   000004   1001         RETA
+   \   000006                REQUIRE _A_PCOUT_L
+     26          
+
+   \                                 In  segment CODE, align 2
+     27          void turnOnLeft(void){
+   \                     turnOnLeft:
+     28            P6OUT |= L_FORWARD;
+   \   000000   E2D34302     BIS.B   #0x2, &0x243
+     29          }
+   \   000004   1001         RETA
+   \   000006                REQUIRE _A_PCOUT_L
+     30          
+
+   \                                 In  segment CODE, align 2
+     31          void turnOffRight(void){
+   \                     turnOffRight:
+     32            P6OUT &= ~R_FORWARD;
+   \   000000   D2C34302     BIC.B   #0x1, &0x243
+     33          }
+   \   000004   1001         RETA
+   \   000006                REQUIRE _A_PCOUT_L
+     34          
+
+   \                                 In  segment CODE, align 2
+     35          void turnOffLeft(void){
+   \                     turnOffLeft:
+     36            P6OUT &= ~L_FORWARD;
+   \   000000   E2C34302     BIC.B   #0x2, &0x243
+     37          }
+   \   000004   1001         RETA
+   \   000006                REQUIRE _A_PCOUT_L
+     38          
+
+   \                                 In  segment CODE, align 2
+     39          void setRightSpeed(int speed){
+   \                     setRightSpeed:
+     40            if(myTime < speed){
+   \   000000   829C....     CMP.W   R12, &myTime
+   \   000004   022C         JC      ??setRightSpeed_0
+     41              turnOnRight();
+   \   000006   ........     BRA     #turnOnRight
+     42            }else{
+     43              turnOffRight();
+   \                     ??setRightSpeed_0:
+   \   00000A   ........     BRA     #turnOffRight
+     44            }
+     45          }
+     46          
+
+   \                                 In  segment CODE, align 2
+     47          void setLeftSpeed(int speed){
+   \                     setLeftSpeed:
+     48            if(myTime < speed){
+   \   000000   829C....     CMP.W   R12, &myTime
+   \   000004   022C         JC      ??setLeftSpeed_0
+     49              turnOnLeft();
+   \   000006   ........     BRA     #turnOnLeft
+     50            }else{
+     51              turnOffLeft();
+   \                     ??setLeftSpeed_0:
+   \   00000A   ........     BRA     #turnOffLeft
+     52            }
+     53          }
+     54          
+
+   \                                 In  segment CODE, align 2
+     55          void resetMotors(void){ // turn off all forward movement
+   \                     resetMotors:
+     56            turnOffLeft();
+   \   000000   ........     CALLA   #turnOffLeft
+     57            turnOffRight();
+   \   000004   ........     BRA     #turnOffRight
+     58          }
+     59          
+
+   \                                 In  segment CODE, align 2
+     60          void rightTurn(void){
+   \                     rightTurn:
+     61              setLeftSpeed(FAST);
+   \   000000   3C403000     MOV.W   #0x30, R12
+   \   000004   ........     CALLA   #setLeftSpeed
+     62              setRightSpeed(SLOW);
+   \   000008   3C400A00     MOV.W   #0xa, R12
+   \   00000C   ........     BRA     #setRightSpeed
+     63          }
+     64          
+
+   \                                 In  segment CODE, align 2
+     65          void leftTurn(void){
+   \                     leftTurn:
+     66              setRightSpeed(FAST);
+   \   000000   3C403000     MOV.W   #0x30, R12
+   \   000004   ........     CALLA   #setRightSpeed
+     67              setLeftSpeed(SLOW); 
+   \   000008   3C400A00     MOV.W   #0xa, R12
+   \   00000C   ........     BRA     #setLeftSpeed
+     68          }
+     69          
+
+   \                                 In  segment CODE, align 2
+     70          void straightLine(void){
+   \                     straightLine:
+     71                setRightSpeed(FAST);
+   \   000000   3C403000     MOV.W   #0x30, R12
+   \   000004   ........     CALLA   #setRightSpeed
+     72                setLeftSpeed(FAST);
+   \   000008   3C403000     MOV.W   #0x30, R12
+   \   00000C   ........     BRA     #setLeftSpeed
+     73          }
+     74          
+
+   \                                 In  segment CODE, align 2
+     75          void sharpTurnRight(void){
+   \                     sharpTurnRight:
+     76                turnOffRight();
+   \   000000   ........     CALLA   #turnOffRight
+     77                setLeftSpeed(FAST);
+   \   000004   3C403000     MOV.W   #0x30, R12
+   \   000008   ........     BRA     #setLeftSpeed
+     78          }
+     79          
+
+   \                                 In  segment CODE, align 2
+     80          void sharpTurnLeft(void){
+   \                     sharpTurnLeft:
+     81                turnOffLeft();
+   \   000000   ........     CALLA   #turnOffLeft
+     82                setRightSpeed(FAST);
+   \   000004   3C403000     MOV.W   #0x30, R12
+   \   000008   ........     BRA     #setRightSpeed
+     83          }
+     84          
+
+   \                                 In  segment CODE, align 2
+     85          void turnRightEight(void){
+   \                     turnRightEight:
+     86            setRightSpeed(VERY_SLOW);
+   \   000000   3C400500     MOV.W   #0x5, R12
+   \   000004   ........     CALLA   #setRightSpeed
+     87            setLeftSpeed(FAST);
+   \   000008   3C403000     MOV.W   #0x30, R12
+   \   00000C   ........     BRA     #setLeftSpeed
+     88          }
+     89            
+
+   \                                 In  segment CODE, align 2
+     90          void turnLeftEight(void){
+   \                     turnLeftEight:
+     91              setLeftSpeed(VERY_SLOW);
+   \   000000   3C400500     MOV.W   #0x5, R12
+   \   000004   ........     CALLA   #setLeftSpeed
+     92              setRightSpeed(FAST);
+   \   000008   3C403000     MOV.W   #0x30, R12
+   \   00000C   ........     BRA     #setRightSpeed
+     93          }
+     94          
+     95            
+     96            
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+      4   leftTurn
+        0   -> setLeftSpeed
+        4   -> setRightSpeed
+      4   resetMotors
+        4   -> turnOffLeft
+        0   -> turnOffRight
+      4   rightTurn
+        4   -> setLeftSpeed
+        0   -> setRightSpeed
+      4   setLeftSpeed
+        0   -> turnOffLeft
+        0   -> turnOnLeft
+      4   setRightSpeed
+        0   -> turnOffRight
+        0   -> turnOnRight
+      4   sharpTurnLeft
+        0   -> setRightSpeed
+        4   -> turnOffLeft
+      4   sharpTurnRight
+        0   -> setLeftSpeed
+        4   -> turnOffRight
+      4   straightLine
+        0   -> setLeftSpeed
+        4   -> setRightSpeed
+      4   turnLeftEight
+        4   -> setLeftSpeed
+        0   -> setRightSpeed
+      4   turnOffLeft
+      4   turnOffRight
+      4   turnOnLeft
+      4   turnOnRight
+      4   turnRightEight
+        0   -> setLeftSpeed
+        4   -> setRightSpeed
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       2  _A_PCOUT_L
+      16  leftTurn
+       8  resetMotors
+      16  rightTurn
+      14  setLeftSpeed
+      14  setRightSpeed
+      12  sharpTurnLeft
+      12  sharpTurnRight
+      16  straightLine
+      16  turnLeftEight
+       6  turnOffLeft
+       6  turnOffRight
+       6  turnOnLeft
+       6  turnOnRight
+      16  turnRightEight
+       2  waitCount
+
+ 
+ 164 bytes in segment CODE
+   2 bytes in segment DATA16_AN
+   2 bytes in segment DATA16_Z
+ 
+ 164 bytes of CODE memory
+   2 bytes of DATA memory (+ 2 bytes shared)
+
+Errors: none
+Warnings: none

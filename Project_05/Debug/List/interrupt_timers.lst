@@ -1,0 +1,625 @@
+###############################################################################
+#
+# IAR C/C++ Compiler V7.12.3.989/W32 for MSP430           23/Feb/2020  15:04:14
+# Copyright 1996-2019 IAR Systems AB.
+# PC-locked license - IAR Embedded Workbench for MSP430, 8K KickStart Edition 7.12
+#
+#    __rt_version  =  3
+#    __double_size =  32
+#    __reg_r4      =  free
+#    __reg_r5      =  free
+#    __pic         =  no
+#    __core        =  430X
+#    __data_model  =  small
+#    __code_model  =  large
+#    Source file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\interrupt_timers.c
+#    Command line  =  
+#        -f C:\Users\platy\AppData\Local\Temp\EW8583.tmp
+#        (C:\Users\platy\Desktop\ECE-306_Code\Project_05\interrupt_timers.c -lC
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\Debug\List -o
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\Debug\Obj --no_cse
+#        --no_unroll --no_inline --no_code_motion --no_tbaa --debug
+#        -D__MSP430FR2355__ -e --double=32 --dlib_config "C:\Program Files
+#        (x86)\IAR Systems\Embedded Workbench 8.0\430\lib\dlib\dl430xlsfn.h" -I
+#        ./\ --core=430X --data_model=small -On --multiplier=32
+#        --hw_workaround=CPU40 --code_model=large)
+#    Locale        =  English_USA.1252
+#    List file     =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\Debug\List\interrupt_timers.lst
+#    Object file   =  
+#        C:\Users\platy\Desktop\ECE-306_Code\Project_05\Debug\Obj\interrupt_timers.r43
+#
+###############################################################################
+
+C:\Users\platy\Desktop\ECE-306_Code\Project_05\interrupt_timers.c
+      1          //==============================================================================
+      2          // Filename : interrupts.c
+      3          //
+      4          // Description: This file contains the interrupt service routines
+      5          //
+      6          // Author: Marcus Kok
+      7          // Date: February 2020
+      8          // Compiler: Built with IAR Embedded Workbench for MSP430 7.12.4
+      9          //==============================================================================
+     10          
+     11          #include "macros.h"
+     12          #include "msp430.h"
+
+   \                                 In  segment DATA16_AN, at 0x21a
+   \   union <unnamed> _A_PAIE_L
+   \                     _A_PAIE_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x23a
+   \   union <unnamed> _A_PBIE_L
+   \                     _A_PBIE_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x382
+   \   union <unnamed> _A_TB0CCTL0_L
+   \                     _A_TB0CCTL0_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x384
+   \   union <unnamed> _A_TB0CCTL1_L
+   \                     _A_TB0CCTL1_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x392
+   \   union <unnamed> _A_TB0CCR0_L
+   \                     _A_TB0CCR0_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x394
+   \   union <unnamed> _A_TB0CCR1_L
+   \                     _A_TB0CCR1_L:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_AN, at 0x3ae
+   \   union <unnamed> _A_TB0IV_L
+   \                     _A_TB0IV_L:
+   \   000000                DS8 2
+     13          #include "functions.h"
+     14          #include <string.h>
+     15          
+     16          //--------------------------- globals ------------------------------------------
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     17          volatile unsigned int CCR0_COUNT = RESET_STATE;
+   \                     CCR0_COUNT:
+   \   000000                DS8 2
+     18          extern unsigned int myTime;
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     19          volatile unsigned int display_count = RESET_STATE;
+   \                     display_count:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     20          volatile unsigned int debounce_count_SW1 = RESET_STATE;
+   \                     debounce_count_SW1:
+   \   000000                DS8 2
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     21          volatile unsigned int debounce_count_SW2 = RESET_STATE;
+   \                     debounce_count_SW2:
+   \   000000                DS8 2
+     22          extern unsigned int debounce_flag_SW1;
+     23          extern unsigned int debounce_flag_SW2;
+     24          
+
+   \                                 In  segment DATA16_Z, align 2, align-sorted
+   \   000000                REQUIRE ?cstart_init_zero
+     25          volatile unsigned int Time_Sequence = RESET_STATE;
+   \                     Time_Sequence:
+   \   000000                DS8 2
+     26          extern volatile unsigned char update_display;
+     27          extern volatile unsigned int update_display_count;
+     28          extern volatile unsigned int wheel_state;
+     29          
+     30          extern volatile unsigned char display_changed;
+     31          extern char display_line[numLines][strSize];
+     32          
+     33          //------------------------------------------------------------------------------
+     34          // CCR0 interrupt 
+     35          
+     36          #pragma vector = TIMER0_B0_VECTOR
+
+   \                                 In  segment ISR_CODE, align 2
+     37          __interrupt void TIMER0_B0_ISR(void){
+   \                     TIMER0_B0_ISR:
+   \   000000   3F15         PUSHM.W #0x4, R15
+     38            // timer interrupt B0 handler every 50 ms
+     39            CCR0_COUNT++;
+   \   000002   9253....     ADD.W   #0x1, &CCR0_COUNT
+     40            display_count++;
+   \   000006   9253....     ADD.W   #0x1, &display_count
+     41            if(CCR0_COUNT == TB0CCR0_CYCLES){                     // 1 second has passed
+   \   00000A   B2900A00.... CMP.W   #0xa, &CCR0_COUNT
+   \   000010   D520         JNE     ??TIMER0_B0_ISR_1
+     42              myTime++; 
+   \   000012   9253....     ADD.W   #0x1, &myTime
+     43              switch(myTime){
+   \   000016   1F42....     MOV.W   &myTime, R15
+   \   00001A   1F83         SUB.W   #0x1, R15
+   \   00001C   1724         JEQ     ??TIMER0_B0_ISR_2
+   \   00001E   1F83         SUB.W   #0x1, R15
+   \   000020   2724         JEQ     ??TIMER0_B0_ISR_3
+   \   000022   1F83         SUB.W   #0x1, R15
+   \   000024   3724         JEQ     ??TIMER0_B0_ISR_4
+   \   000026   2F83         SUB.W   #0x2, R15
+   \   000028   4724         JEQ     ??TIMER0_B0_ISR_5
+   \   00002A   1F83         SUB.W   #0x1, R15
+   \   00002C   5724         JEQ     ??TIMER0_B0_ISR_6
+   \   00002E   1F83         SUB.W   #0x1, R15
+   \   000030   6724         JEQ     ??TIMER0_B0_ISR_7
+   \   000032   1F83         SUB.W   #0x1, R15
+   \   000034   7724         JEQ     ??TIMER0_B0_ISR_8
+   \   000036   3F800300     SUB.W   #0x3, R15
+   \   00003A   8624         JEQ     ??TIMER0_B0_ISR_9
+   \   00003C   2F83         SUB.W   #0x2, R15
+   \   00003E   9624         JEQ     ??TIMER0_B0_ISR_10
+   \   000040   3F800300     SUB.W   #0x3, R15
+   \   000044   A524         JEQ     ??TIMER0_B0_ISR_11
+   \   000046   2F83         SUB.W   #0x2, R15
+   \   000048   B524         JEQ     ??TIMER0_B0_ISR_12
+   \   00004A   B63C         JMP     ??TIMER0_B0_ISR_0
+     44              case START_FORWARD:
+     45                move_Forward(); 
+   \                     ??TIMER0_B0_ISR_2:
+   \   00004C   ........     CALLA   #move_Forward
+     46                
+     47                strcpy(display_line[line2], "  Forward "); // update display
+   \   000050   3D40....     MOV.W   #`?<Constant "  Forward ">`, R13
+   \   000054   3C40....     MOV.W   #display_line + 11, R12
+   \   000058   ........     CALLA   #strcpy
+     48                update_string(display_line[line2], line2);
+   \   00005C   1D43         MOV.W   #0x1, R13
+   \   00005E   3C40....     MOV.W   #display_line + 11, R12
+   \   000062   ........     CALLA   #update_string
+     49                enable_display_update();
+   \   000066   ........     CALLA   #enable_display_update
+     50                display_changed = TRUE;
+   \   00006A   D243....     MOV.B   #0x1, &display_changed
+     51                break;
+   \   00006E   A43C         JMP     ??TIMER0_B0_ISR_0
+     52              case STOP_FIRST_FORWARD:
+     53                stop_Movement();
+   \                     ??TIMER0_B0_ISR_3:
+   \   000070   ........     CALLA   #stop_Movement
+     54                
+     55                strcpy(display_line[line2], "   Hold   "); // update display
+   \   000074   3D40....     MOV.W   #`?<Constant "   Hold   ">`, R13
+   \   000078   3C40....     MOV.W   #display_line + 11, R12
+   \   00007C   ........     CALLA   #strcpy
+     56                update_string(display_line[line2], line2);
+   \   000080   1D43         MOV.W   #0x1, R13
+   \   000082   3C40....     MOV.W   #display_line + 11, R12
+   \   000086   ........     CALLA   #update_string
+     57                enable_display_update();
+   \   00008A   ........     CALLA   #enable_display_update
+     58                display_changed = TRUE;
+   \   00008E   D243....     MOV.B   #0x1, &display_changed
+     59                break;
+   \   000092   923C         JMP     ??TIMER0_B0_ISR_0
+     60              case START_REVERSE:
+     61                move_Reverse();
+   \                     ??TIMER0_B0_ISR_4:
+   \   000094   ........     CALLA   #move_Reverse
+     62                
+     63                strcpy(display_line[line2], " Reverse  "); // update display
+   \   000098   3D40....     MOV.W   #`?<Constant " Reverse  ">`, R13
+   \   00009C   3C40....     MOV.W   #display_line + 11, R12
+   \   0000A0   ........     CALLA   #strcpy
+     64                update_string(display_line[line2], line2);
+   \   0000A4   1D43         MOV.W   #0x1, R13
+   \   0000A6   3C40....     MOV.W   #display_line + 11, R12
+   \   0000AA   ........     CALLA   #update_string
+     65                enable_display_update();
+   \   0000AE   ........     CALLA   #enable_display_update
+     66                display_changed = TRUE;
+   \   0000B2   D243....     MOV.B   #0x1, &display_changed
+     67                break;
+   \   0000B6   803C         JMP     ??TIMER0_B0_ISR_0
+     68              case STOP_REVERSE:
+     69                stop_Movement();
+   \                     ??TIMER0_B0_ISR_5:
+   \   0000B8   ........     CALLA   #stop_Movement
+     70                
+     71                strcpy(display_line[line2], "   Hold   "); // update display
+   \   0000BC   3D40....     MOV.W   #`?<Constant "   Hold   ">`, R13
+   \   0000C0   3C40....     MOV.W   #display_line + 11, R12
+   \   0000C4   ........     CALLA   #strcpy
+     72                update_string(display_line[line2], line2);
+   \   0000C8   1D43         MOV.W   #0x1, R13
+   \   0000CA   3C40....     MOV.W   #display_line + 11, R12
+   \   0000CE   ........     CALLA   #update_string
+     73                enable_display_update();
+   \   0000D2   ........     CALLA   #enable_display_update
+     74                display_changed = TRUE;
+   \   0000D6   D243....     MOV.B   #0x1, &display_changed
+     75                break;
+   \   0000DA   6E3C         JMP     ??TIMER0_B0_ISR_0
+     76              case START_SECOND_FORWARD:
+     77                move_Forward();
+   \                     ??TIMER0_B0_ISR_6:
+   \   0000DC   ........     CALLA   #move_Forward
+     78                
+     79                strcpy(display_line[line2], "  Forward "); // update display
+   \   0000E0   3D40....     MOV.W   #`?<Constant "  Forward ">`, R13
+   \   0000E4   3C40....     MOV.W   #display_line + 11, R12
+   \   0000E8   ........     CALLA   #strcpy
+     80                update_string(display_line[line2], line2);
+   \   0000EC   1D43         MOV.W   #0x1, R13
+   \   0000EE   3C40....     MOV.W   #display_line + 11, R12
+   \   0000F2   ........     CALLA   #update_string
+     81                enable_display_update();
+   \   0000F6   ........     CALLA   #enable_display_update
+     82                display_changed = TRUE;
+   \   0000FA   D243....     MOV.B   #0x1, &display_changed
+     83                break;
+   \   0000FE   5C3C         JMP     ??TIMER0_B0_ISR_0
+     84              case STOP_SECOND_FORWARD:
+     85                stop_Movement();
+   \                     ??TIMER0_B0_ISR_7:
+   \   000100   ........     CALLA   #stop_Movement
+     86                
+     87                strcpy(display_line[line2], "   Hold   "); // update display
+   \   000104   3D40....     MOV.W   #`?<Constant "   Hold   ">`, R13
+   \   000108   3C40....     MOV.W   #display_line + 11, R12
+   \   00010C   ........     CALLA   #strcpy
+     88                update_string(display_line[line2], line2);
+   \   000110   1D43         MOV.W   #0x1, R13
+   \   000112   3C40....     MOV.W   #display_line + 11, R12
+   \   000116   ........     CALLA   #update_string
+     89                enable_display_update();
+   \   00011A   ........     CALLA   #enable_display_update
+     90                display_changed = TRUE;
+   \   00011E   D243....     MOV.B   #0x1, &display_changed
+     91                break;
+   \   000122   4A3C         JMP     ??TIMER0_B0_ISR_0
+     92              case START_SPIN_CW:
+     93                spin_CW();
+   \                     ??TIMER0_B0_ISR_8:
+   \   000124   ........     CALLA   #spin_CW
+     94                
+     95                strcpy(display_line[line2], " Spin CW  "); // update display
+   \   000128   3D40....     MOV.W   #`?<Constant " Spin CW  ">`, R13
+   \   00012C   3C40....     MOV.W   #display_line + 11, R12
+   \   000130   ........     CALLA   #strcpy
+     96                update_string(display_line[line2], line2);
+   \   000134   1D43         MOV.W   #0x1, R13
+   \   000136   3C40....     MOV.W   #display_line + 11, R12
+   \   00013A   ........     CALLA   #update_string
+     97                enable_display_update();
+   \   00013E   ........     CALLA   #enable_display_update
+     98                display_changed = TRUE;
+   \   000142   D243....     MOV.B   #0x1, &display_changed
+     99                break;
+   \   000146   383C         JMP     ??TIMER0_B0_ISR_0
+    100              case STOP_SPIN_CW:
+    101                stop_Movement();
+   \                     ??TIMER0_B0_ISR_9:
+   \   000148   ........     CALLA   #stop_Movement
+    102                
+    103                strcpy(display_line[line2], "   Hold   "); // update display
+   \   00014C   3D40....     MOV.W   #`?<Constant "   Hold   ">`, R13
+   \   000150   3C40....     MOV.W   #display_line + 11, R12
+   \   000154   ........     CALLA   #strcpy
+    104                update_string(display_line[line2], line2);
+   \   000158   1D43         MOV.W   #0x1, R13
+   \   00015A   3C40....     MOV.W   #display_line + 11, R12
+   \   00015E   ........     CALLA   #update_string
+    105                enable_display_update();
+   \   000162   ........     CALLA   #enable_display_update
+    106                display_changed = TRUE;
+   \   000166   D243....     MOV.B   #0x1, &display_changed
+    107                break;
+   \   00016A   263C         JMP     ??TIMER0_B0_ISR_0
+    108              case START_SPIN_CCW:
+    109                spin_CCW();                               
+   \                     ??TIMER0_B0_ISR_10:
+   \   00016C   ........     CALLA   #spin_CCW
+    110                
+    111                strcpy(display_line[line2], " Spin CCW "); // update display
+   \   000170   3D40....     MOV.W   #`?<Constant " Spin CCW ">`, R13
+   \   000174   3C40....     MOV.W   #display_line + 11, R12
+   \   000178   ........     CALLA   #strcpy
+    112                update_string(display_line[line2], line2);
+   \   00017C   1D43         MOV.W   #0x1, R13
+   \   00017E   3C40....     MOV.W   #display_line + 11, R12
+   \   000182   ........     CALLA   #update_string
+    113                enable_display_update();
+   \   000186   ........     CALLA   #enable_display_update
+    114                display_changed = TRUE;
+   \   00018A   D243....     MOV.B   #0x1, &display_changed
+    115                break;
+   \   00018E   143C         JMP     ??TIMER0_B0_ISR_0
+    116              case STOP_SPIN_CCW:
+    117                stop_Movement();
+   \                     ??TIMER0_B0_ISR_11:
+   \   000190   ........     CALLA   #stop_Movement
+    118                
+    119                strcpy(display_line[line2], "   Hold   "); // update display
+   \   000194   3D40....     MOV.W   #`?<Constant "   Hold   ">`, R13
+   \   000198   3C40....     MOV.W   #display_line + 11, R12
+   \   00019C   ........     CALLA   #strcpy
+    120                update_string(display_line[line2], line2);
+   \   0001A0   1D43         MOV.W   #0x1, R13
+   \   0001A2   3C40....     MOV.W   #display_line + 11, R12
+   \   0001A6   ........     CALLA   #update_string
+    121                enable_display_update();
+   \   0001AA   ........     CALLA   #enable_display_update
+    122                display_changed = TRUE;
+   \   0001AE   D243....     MOV.B   #0x1, &display_changed
+    123                break;
+   \   0001B2   023C         JMP     ??TIMER0_B0_ISR_0
+    124              case MAX_TIME:
+    125                myTime = RESET_STATE;
+   \                     ??TIMER0_B0_ISR_12:
+   \   0001B4   8243....     MOV.W   #0x0, &myTime
+    126                break;
+    127              default: break;
+    128              }
+    129              CCR0_COUNT = RESET_STATE;
+   \                     ??TIMER0_B0_ISR_0:
+   \   0001B8   8243....     MOV.W   #0x0, &CCR0_COUNT
+    130            }
+    131            
+    132            if(display_count > UPDATE_DISPLAY_THRESHOLD){         // 200 ms has passed
+   \                     ??TIMER0_B0_ISR_1:
+   \   0001BC   B2900500.... CMP.W   #0x5, &display_count
+   \   0001C2   0428         JNC     ??TIMER0_B0_ISR_13
+    133                update_display = TRUE; // set update display true
+   \   0001C4   D243....     MOV.B   #0x1, &update_display
+    134                display_count = RESET_STATE; //reset count
+   \   0001C8   8243....     MOV.W   #0x0, &display_count
+    135              }
+    136            TB0CCR0 += TB0CCR0_INTERVAL;
+   \                     ??TIMER0_B0_ISR_13:
+   \   0001CC   B25050C39203 ADD.W   #0xc350, &0x392
+    137          }
+   \   0001D2   3C17         POPM.W  #0x4, R15
+   \   0001D4   0013         RETI
+   \   0001D6                REQUIRE _A_TB0CCR0_L
+    138          //------------------------- overflow handler TB0 -------------------------------
+    139          #pragma vector = TIMER0_B1_VECTOR
+
+   \                                 In  segment ISR_CODE, align 2
+    140          __interrupt void TIMER0_B1_ISR(void){
+   \                     TIMER0_B1_ISR:
+   \   000000   0F12         PUSH.W  R15
+    141            //Timer B0 1-2 overflow interrupt vector (TBIV) handler
+    142            
+    143            switch(__even_in_range(TB0IV, OVERFLOW)){
+   \   000002   1F42AE03     MOV.W   &0x3ae, R15
+   \   000006   E00F         ADDA    R15, PC
+   \                     `?<Jumptable for TIMER0_B1_ISR>_0`:
+   \   000008   3F3C         JMP     ??TIMER0_B1_ISR_2
+   \   00000A   063C         JMP     ??TIMER0_B1_ISR_5
+   \   00000C   353C         JMP     ??TIMER0_B1_ISR_6
+   \   00000E   3C3C         JMP     ??TIMER0_B1_ISR_2
+   \   000010   3B3C         JMP     ??TIMER0_B1_ISR_2
+   \   000012   3A3C         JMP     ??TIMER0_B1_ISR_2
+   \   000014   393C         JMP     ??TIMER0_B1_ISR_2
+   \   000016   383C         JMP     ??TIMER0_B1_ISR_2
+    144            case NO_INTERRUPT: break; // no interrupt
+    145            case CCR1PORT:       // CCR1 not used
+    146          //---------------------- debounce timer interrupt --------------------------
+    147                if(debounce_flag_SW1){
+   \                     ??TIMER0_B1_ISR_5:
+   \   000018   8293....     CMP.W   #0x0, &debounce_flag_SW1
+   \   00001C   1324         JEQ     ??TIMER0_B1_ISR_3
+    148                   debounce_count_SW1++;
+   \   00001E   9253....     ADD.W   #0x1, &debounce_count_SW1
+    149                   if(debounce_count_SW1 > DEBOUNCE_THRESHOLD){
+   \   000022   B2900600.... CMP.W   #0x6, &debounce_count_SW1
+   \   000028   0D28         JNC     ??TIMER0_B1_ISR_3
+    150                      P4IE |= SW1;                      // re-enable SW1 interrupt
+   \   00002A   E2D33B02     BIS.B   #0x2, &0x23b
+    151                      debounce_flag_SW1 = FALSE;        // flag set to false
+   \   00002E   8243....     MOV.W   #0x0, &debounce_flag_SW1
+    152                      if(!debounce_flag_SW2){
+   \   000032   8293....     CMP.W   #0x0, &debounce_flag_SW2
+   \   000036   0620         JNE     ??TIMER0_B1_ISR_3
+    153                        TB0CCTL0 |= CCIE;               // enable CCR0 interrupt
+   \   000038   B2D010008203 BIS.W   #0x10, &0x382
+    154                        TB0CCTL1 &= ~CCIE;              // disable debounce timer interrupt
+   \   00003E   B2C010008403 BIC.W   #0x10, &0x384
+    155                      }
+    156                   }
+    157                  }
+    158            //---------------------------- SW2--------------------------------------------- 
+    159                if(debounce_flag_SW2){
+   \                     ??TIMER0_B1_ISR_3:
+   \   000044   8293....     CMP.W   #0x0, &debounce_flag_SW2
+   \   000048   1324         JEQ     ??TIMER0_B1_ISR_4
+    160                    debounce_count_SW2++;
+   \   00004A   9253....     ADD.W   #0x1, &debounce_count_SW2
+    161                    if(debounce_count_SW2 > DEBOUNCE_THRESHOLD){
+   \   00004E   B2900600.... CMP.W   #0x6, &debounce_count_SW2
+   \   000054   0D28         JNC     ??TIMER0_B1_ISR_4
+    162                      P2IE |= SW2;                      // re-enable SW2 interrupt
+   \   000056   F2D21B02     BIS.B   #0x8, &0x21b
+    163                      debounce_flag_SW2 = FALSE;        // flag set to false
+   \   00005A   8243....     MOV.W   #0x0, &debounce_flag_SW2
+    164                      if(!debounce_flag_SW1){
+   \   00005E   8293....     CMP.W   #0x0, &debounce_flag_SW1
+   \   000062   0620         JNE     ??TIMER0_B1_ISR_4
+    165                        TB0CCTL0 |= CCIE;               // re-enable CCR0 interrupt
+   \   000064   B2D010008203 BIS.W   #0x10, &0x382
+    166                        TB0CCTL1 &= ~CCIE;              //disable timer interrupt
+   \   00006A   B2C010008403 BIC.W   #0x10, &0x384
+    167                      } 
+    168                    }
+    169                  }
+    170                TB0CCR1 += TB0CCR1_INTERVAL; // add offset to TBCCR1
+   \                     ??TIMER0_B1_ISR_4:
+   \   000070   B25088139403 ADD.W   #0x1388, &0x394
+    171              break;
+   \   000076   083C         JMP     ??TIMER0_B1_ISR_2
+    172              
+    173            case CCR2PORT:                       // Time_Sequence interrupt
+    174              Time_Sequence++;
+   \                     ??TIMER0_B1_ISR_6:
+   \   000078   9253....     ADD.W   #0x1, &Time_Sequence
+    175              if(Time_Sequence > TIME_SEQUENCE_CYCLES){
+   \   00007C   B290FB00.... CMP.W   #0xfb, &Time_Sequence
+   \   000082   0228         JNC     ??TIMER0_B1_ISR_2
+    176                Time_Sequence = RESET_STATE;
+   \   000084   8243....     MOV.W   #0x0, &Time_Sequence
+    177              }
+    178              //TB0CCR2 += TB0CCR2_INTERVAL;
+    179              break; 
+    180              
+    181            case OVERFLOW:                     //overflow
+    182              //implementation
+    183              break;
+    184            default: break;
+    185            }
+    186          }
+   \                     ??TIMER0_B1_ISR_2:
+   \   000088   3F41         POP.W   R15
+   \   00008A   0013         RETI
+   \   00008C                REQUIRE _A_PBIE_L
+   \   00008C                REQUIRE _A_TB0CCTL0_L
+   \   00008C                REQUIRE _A_TB0CCTL1_L
+   \   00008C                REQUIRE _A_PAIE_L
+   \   00008C                REQUIRE _A_TB0CCR1_L
+   \   00008C                REQUIRE _A_TB0IV_L
+
+   \                                 In  segment INTVEC, offset 0x54, root
+   \                     `??TIMER0_B1_ISR::??INTVEC 84`:
+   \   000054   ....         DC16    TIMER0_B1_ISR
+
+   \                                 In  segment INTVEC, offset 0x56, root
+   \                     `??TIMER0_B0_ISR::??INTVEC 86`:
+   \   000056   ....         DC16    TIMER0_B0_ISR
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "  Forward ">`:
+   \   000000   2020466F7277 DC8 "  Forward "
+   \            6172642000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant "   Hold   ">`:
+   \   000000   202020486F6C DC8 "   Hold   "
+   \            6420202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " Reverse  ">`:
+   \   000000   205265766572 DC8 " Reverse  "
+   \            7365202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " Spin CW  ">`:
+   \   000000   205370696E20 DC8 " Spin CW  "
+   \            4357202000  
+
+   \                                 In  segment DATA16_C, align 1, align-sorted
+   \                     `?<Constant " Spin CCW ">`:
+   \   000000   205370696E20 DC8 " Spin CCW "
+   \            4343572000  
+    187          
+    188          /*#pragma vector = TIMER3_B0_VECTOR
+    189          __interrupt void TIMER3_B0_ISR(void){
+    190              switch(wheel_state){
+    191                
+    192              case HOLD:                          // stop all wheel movement
+    193                  stop_Movement();    
+    194                  break;
+    195                  
+    196              case FORWARD:
+    197                  move_Forward();
+    198                  break;
+    199                  
+    200              case REVERSE:
+    201                  move_Reverse();
+    202                  break;
+    203                  
+    204              case SPIN_CW:
+    205                  spin_CW();
+    206                  break;
+    207                  
+    208              case SPIN_CCW:
+    209                  spin_CCW();
+    210                  break;
+    211                  
+    212              default: break;
+    213            }
+    214          }
+    215          
+    216          #pragma vector = TIMER3_B1_VECTOR
+    217          __interrupt void TIMER3_B1_ISR(void){
+    218            switch(__even_in_range(TB0IV, OVERFLOW)){
+    219              case NO_INTERRUPT: break;
+    220              case CCR1PORT:
+    221              break;
+    222            case CCR2PORT:
+    223              break;
+    224            case OVERFLOW:
+    225              break;
+    226            default: break;
+    227            }
+    228          }*/
+
+   Maximum stack usage in bytes:
+
+   CSTACK Function
+   ------ --------
+     12   TIMER0_B0_ISR
+       12   -> enable_display_update
+       12   -> move_Forward
+       12   -> move_Reverse
+       12   -> spin_CCW
+       12   -> spin_CW
+       12   -> stop_Movement
+       12   -> strcpy
+       12   -> update_string
+      6   TIMER0_B1_ISR
+
+
+   Segment part sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+      11  ?<Constant "   Hold   ">
+      11  ?<Constant "  Forward ">
+      11  ?<Constant " Reverse  ">
+      11  ?<Constant " Spin CCW ">
+      11  ?<Constant " Spin CW  ">
+       2  CCR0_COUNT
+     470  TIMER0_B0_ISR
+       2  TIMER0_B0_ISR::??INTVEC 86
+     140  TIMER0_B1_ISR
+       2  TIMER0_B1_ISR::??INTVEC 84
+       2  Time_Sequence
+       2  _A_PAIE_L
+       2  _A_PBIE_L
+       2  _A_TB0CCR0_L
+       2  _A_TB0CCR1_L
+       2  _A_TB0CCTL0_L
+       2  _A_TB0CCTL1_L
+       2  _A_TB0IV_L
+       2  debounce_count_SW1
+       2  debounce_count_SW2
+       2  display_count
+
+ 
+  14 bytes in segment DATA16_AN
+  55 bytes in segment DATA16_C
+  10 bytes in segment DATA16_Z
+   4 bytes in segment INTVEC
+ 610 bytes in segment ISR_CODE
+ 
+ 610 bytes of CODE  memory
+  55 bytes of CONST memory (+  4 bytes shared)
+  10 bytes of DATA  memory (+ 14 bytes shared)
+
+Errors: none
+Warnings: none
